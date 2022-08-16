@@ -1,8 +1,8 @@
 {
-  "name": "eil-2b-vpc-1",
+  "name": "vpc1",
   "version": "0.1.0",
   "bin": {
-    "eil-2b-vpc-1": "bin/eil-2b-vpc-1.js"
+    "vpc1": "bin/vpc1.js"
   },
   "scripts": {
     "build": "tsc",

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { Eil2BVpc1Stack } from '../lib/eil-2b-vpc-1-stack';
+import { Vpc1Stack } from '../lib/vpc1-stack';
 
 const app = new cdk.App();
-new Eil2BVpc1Stack(app, 'Eil2BVpc1Stack', {
+new Vpc1Stack(app, 'Vpc1Stack', {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */
