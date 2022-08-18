@@ -8,9 +8,9 @@ export class Vpc1Stack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const vpc = new ec2.Vpc(this, '2b-vpc-1')
+    const vpc = new ec2.Vpc(this, 'vpc-1')
 
-    const alb = new elbv2.ApplicationLoadBalancer(this, '2b-alb-1', {
+    const alb = new elbv2.ApplicationLoadBalancer(this, 'alb-1', {
       vpc,
       internetFacing: true,
     })
