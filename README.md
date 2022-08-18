@@ -1,2 +1,3 @@
-# 2b-infra
+# infra
+
 AWS CDK files
