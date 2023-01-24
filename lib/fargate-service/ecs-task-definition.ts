@@ -3,10 +3,10 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 
-export interface IC8FargateBasicContainerDefinition {
-  /** the function for which we want to count url hits **/
+export interface FargateContainerDefinition {
   name: string;
   essential: boolean;
   portMappings?: ecs.PortMapping[];
@@ -15,76 +15,53 @@ export interface IC8FargateBasicContainerDefinition {
   dockerLabels?: any;
 }
 
-export interface IC8FargateBasicTaskDefinition {
-  executionRoleArn: string;
-  taskRoleArn: string;
-  containerDefinitions: IC8FargateBasicContainerDefinition[];
-  cpu?: string;
-  family: string;
-  memory?: string;
-}
-
 export interface FargateTaskDefinitionProps {
   serviceName: string;
-  ecrRepoArn: string;
-  ecrImageTag: string;
-  taskDefinition: IC8FargateBasicTaskDefinition;
   envName: string;
-  addC8Metrics?: boolean;
-  addDatadog?: boolean;
+  ecsDefExecRoleSsmParam: string;
+  ecsDefTaskRoleSsmParam: string;
+  dockerImageUrl: string;
+  family?: string;
+  containerDefinitions: FargateContainerDefinition[];
+  cpu?: string;
+  memory?: string;
+  executionRoleArn?: string;
+  taskRoleArn?: string;
 }
 
 export class FargateTaskDefinition extends Construct {
   private taskDefinition: ecs.FargateTaskDefinition;
 
-  private readonly defaultCpu: string = '2048';
-  private readonly defaultMemory: string = '4096';
+  private readonly defaultCpu: number = 256;
+
+  private readonly defaultMemory: number = 512;
 
   constructor(scope: Construct, id: string, props: FargateTaskDefinitionProps) {
     super(scope, id);
 
-    const repository = ecr.Repository.fromRepositoryArn(this, `${props.serviceName}EcrRepository`, props.ecrRepoArn);
+    const executionRoleArn =
+      props.executionRoleArn || ssm.StringParameter.fromStringParameterName(this, 'EcsExecRoleArn', props.ecsDefExecRoleSsmParam).stringValue;
+    const taskRoleArn =
+      props.taskRoleArn || ssm.StringParameter.fromStringParameterName(this, 'EcsTaskRoleArn', props.ecsDefTaskRoleSsmParam).stringValue;
 
-    const taskRole = new iam.Role(this, 'ServiceTaskRole', {
-      roleName: `ecs-service-task-role`,
-      description: 'The role for c8 services containers to assume with access to the appropriate resources.',
-      assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
-    });
+    const execRole = iam.Role.fromRoleArn(this, 'ExecutionRole', executionRoleArn);
+    const taskRole = iam.Role.fromRoleArn(this, 'TaskRole', taskRoleArn);
 
-    taskRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ['ssm:GetParameter'],
-        resources: [`arn:aws:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:*`],
-      })
-    );
-    
-    taskRole.addToPolicy(new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["secretsmanager:GetSecretValue",
-            "secretsmanager:DescribeSecret",
-            "secretsmanager:ListSecretVersionIds"
-        ],
-        resources: [`arn:aws:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:*`],
-    }));
-
-    const execRole = iam.Role.fromRoleArn(this, 'executionRole', props.taskDefinition.executionRoleArn);
-    // const taskRole = iam.Role.fromRoleArn(this, 'taskRole', props.taskDefinition.taskRoleArn);
-
-    const cpu = props.taskDefinition.cpu ? parseInt(props.taskDefinition.cpu) : parseInt(this.defaultCpu);
-    const memory = props.taskDefinition.memory ? parseInt(props.taskDefinition.memory) : parseInt(this.defaultMemory);
+    const cpu = props.cpu ? parseInt(props.cpu) : this.defaultCpu;
+    const memory = props.memory ? parseInt(props.memory) : this.defaultMemory;
+    const taskFamily = props.family || props.serviceName;
 
     const taskDefinitionProps: ecs.FargateTaskDefinitionProps = {
       executionRole: execRole,
-      cpu,
-      family: props.taskDefinition.family,
+      cpu: cpu,
+      family: taskFamily,
       memoryLimitMiB: memory,
       taskRole: taskRole,
     };
 
     this.taskDefinition = new ecs.FargateTaskDefinition(this, `${props.serviceName}TaskDefinition`, taskDefinitionProps);
 
-    props.taskDefinition.containerDefinitions.forEach((definition) => {
+    for (const definition of props.containerDefinitions) {
       const logGroup = new logs.LogGroup(this, `${definition.name}ContainerLogGroup`, {
         logGroupName: `/ecs/${definition.name}`,
         retention: logs.RetentionDays.ONE_MONTH,
@@ -93,7 +70,7 @@ export class FargateTaskDefinition extends Construct {
 
       const containerDefinitionProps: ecs.ContainerDefinitionProps = {
         taskDefinition: this.taskDefinition,
-        image: ecs.ContainerImage.fromEcrRepository(repository, props.ecrImageTag),
+        image: ecs.ContainerImage.fromRegistry(props.dockerImageUrl),
         essential: definition.essential,
         logging: ecs.LogDriver.awsLogs({
           streamPrefix: 'ecs',
@@ -109,10 +86,10 @@ export class FargateTaskDefinition extends Construct {
       definition.portMappings?.forEach((mapping) => {
         taskContainer.addPortMappings(mapping);
       });
-    });
+    }
   }
 
-  public fargateTaskDefinition(): ecs.FargateTaskDefinition {
+  public build(): ecs.FargateTaskDefinition {
     return this.taskDefinition;
   }
 }

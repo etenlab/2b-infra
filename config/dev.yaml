@@ -4,4 +4,24 @@ awsRegion: 'us-east-2'
 vpcCidr: '10.0.0.0/16'
 natGatewaysCount: 0
 
-vpcSsmParam: 'dev-app-vpc-id'
+vpcSsmParam: '/dev/app-vpc-id'
+defaultEcsExecRoleSsmParam: '/dev/ecs-default-execution-role'
+edefaultEcsTaskRoleSsmParam: '/dev/ecs-default-task-role'
+
+dbCredential: 'dev/db/password'
+
+databaseApi:
+  containerPort: 3001
+  hostPort: 3001
+  serviceName: 'databaseApi'
+  dockerImageUrl: 'docker.io/etenlab/database-api:latest'
+  cpu: 512
+  memory: 1024
+
+adminApi:
+  containerPort: 4001
+  hostPort: 4001
+  serviceName: 'adminApi'
+  dockerImageUrl: 'etenlab/admin-api:latest'
+  cpu: 512
+  memory: 1024

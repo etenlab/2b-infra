@@ -10,6 +10,15 @@ export interface EnvConfig {
   [key: string]: unknown;
 }
 
+export interface FargateServiceConfig {
+  containerPort: number;
+  hostPort: number;
+  serviceName: string;
+  dockerImageUrl: string;
+  cpu: number;
+  memory: number;
+}
+
 /**
  * Gets variable value from CDK context
  *
@@ -20,7 +29,7 @@ export interface EnvConfig {
  *
  * @returns value of the context variable
  */
-const getContextVariable = (app: cdk.App, contextKey: string): string => {
+export const getContextVariable = (app: cdk.App, contextKey: string): string => {
   const contextVar = app.node.tryGetContext(contextKey);
   if (!contextVar) throw new Error(`Context variable ${contextKey} is missing in CDK command. Pass it as -c ${contextKey}=VALUE`);
 
