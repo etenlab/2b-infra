@@ -89,7 +89,7 @@ export class FargateTaskDefinition extends Construct {
     }
   }
 
-  public build(): ecs.FargateTaskDefinition {
+  public getFargateTaskDefinition(): ecs.FargateTaskDefinition {
     return this.taskDefinition;
   }
 }

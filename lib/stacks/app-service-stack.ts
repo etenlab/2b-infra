@@ -3,9 +3,10 @@ import { Construct } from 'constructs';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
-import { FargateTaskDefinition } from './ecs-task-definition';
+import { FargateTaskDefinition } from '../components/ecs-task-definition';
 
 export interface FargateServiceSecret {
   taskDefSecretName: string;
@@ -13,10 +14,12 @@ export interface FargateServiceSecret {
   secretsManagerSecretName: string;
 }
 
-export interface FargateServiceStackProps extends cdk.StackProps {
+export interface AppServiceStackProps extends cdk.StackProps {
   readonly envName: string;
+  readonly appPrefix: string;
 
   readonly vpcSsmParam: string;
+  readonly albArnSsmParam: string;
   readonly ecsExecRoleSsmParam: string;
   readonly ecsTaskRoleSsmParam: string;
   readonly containerPort: number;
@@ -28,13 +31,13 @@ export interface FargateServiceStackProps extends cdk.StackProps {
   readonly secrets: FargateServiceSecret[];
 }
 
-export class FargateServiceStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: FargateServiceStackProps) {
+export class AppServiceStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: AppServiceStackProps) {
     super(scope, id, props);
 
     const vpcId = ssm.StringParameter.valueFromLookup(this, props.vpcSsmParam);
 
-    const vpc = ec2.Vpc.fromLookup(this, 'Vpc', {
+    const vpc = ec2.Vpc.fromLookup(this, `${props.appPrefix}Vpc`, {
       vpcId,
     });
 
@@ -44,7 +47,11 @@ export class FargateServiceStack extends cdk.Stack {
       secrets[secret.taskDefSecretName] = ecs.Secret.fromSecretsManager(secretsManagerSecret, secret.secretsMangerSecretField);
     }
 
-    const taskDefinition = new FargateTaskDefinition(this, 'FargateTaskDefinition', {
+    const albArn = ssm.StringParameter.valueFromLookup(this, props.albArnSsmParam);
+
+    const alb = elbv2.ApplicationLoadBalancer.fromLookup(this, `${props.appPrefix}Alb`, { loadBalancerArn: albArn });
+
+    const taskDefinition = new FargateTaskDefinition(this, `${props.appPrefix}FargateTaskDefinition`, {
       serviceName: props.serviceName,
       dockerImageUrl: props.dockerImageUrl,
       envName: props.envName,
@@ -68,6 +75,6 @@ export class FargateServiceStack extends cdk.Stack {
           },
         },
       ],
-    }).build();
+    });
   }
 }

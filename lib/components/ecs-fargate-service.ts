@@ -23,7 +23,7 @@ export interface FargateServiceProps {
   ports: ec2.Port[];
 }
 
-export class FargateService extends Construct {
+export class EcsFargateService extends Construct {
   private service: ecs.FargateService;
 
   constructor(scope: Construct, id: string, props: FargateServiceProps) {
@@ -56,7 +56,7 @@ export class FargateService extends Construct {
     service.attachToApplicationTargetGroup(props.targetGroup);
   }
 
-  public build(): ecs.FargateService {
+  public getEcsService(): ecs.FargateService {
     return this.service;
   }
 }

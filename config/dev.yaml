@@ -7,6 +7,7 @@ natGatewaysCount: 0
 vpcSsmParam: '/dev/app-vpc-id'
 defaultEcsExecRoleSsmParam: '/dev/ecs-default-execution-role'
 edefaultEcsTaskRoleSsmParam: '/dev/ecs-default-task-role'
+albArnSsmParam: '/dev/alb-arn'
 
 dbCredential: 'dev/db/password'
 
