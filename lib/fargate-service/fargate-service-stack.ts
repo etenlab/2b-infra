@@ -6,7 +6,6 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
 import { FargateTaskDefinition } from './ecs-task-definition';
-import { SecretTargetAttachment } from 'aws-cdk-lib/aws-secretsmanager';
 
 export interface FargateServiceSecret {
   taskDefSecretName: string;
