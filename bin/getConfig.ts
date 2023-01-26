@@ -17,6 +17,7 @@ export interface FargateServiceConfig {
   dockerImageUrl: string;
   cpu: number;
   memory: number;
+  taskCount: number
 }
 
 /**

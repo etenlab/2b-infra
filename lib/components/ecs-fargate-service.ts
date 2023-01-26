@@ -2,24 +2,17 @@ import 'source-map-support/register';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
-import * as cdk from 'aws-cdk-lib/core';
+import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 export interface FargateServiceProps {
   serviceName: string;
-
   taskDefinition: ecs.FargateTaskDefinition;
-
-  cluster: ecs.Cluster;
-
+  cluster: ecs.ICluster;
   targetGroup: elbv2.ApplicationTargetGroup;
-
-  albSecurityGroup: ec2.SecurityGroup;
-
+  albSecurityGroup: ec2.ISecurityGroup;
   vpc: ec2.IVpc;
-
   taskCount: number;
-
   ports: ec2.Port[];
 }
 
@@ -29,7 +22,7 @@ export class EcsFargateService extends Construct {
   constructor(scope: Construct, id: string, props: FargateServiceProps) {
     super(scope, id);
 
-    const serviceSg = new ec2.SecurityGroup(scope, `${props.serviceName}ServiceSg`, {
+    const serviceSg = new ec2.SecurityGroup(scope, `${props.serviceName}FargateServiceSg`, {
       vpc: props.vpc,
       description: `${props.serviceName} fargate service security group`,
       securityGroupName: `${props.serviceName}-service-sg`,
@@ -42,6 +35,7 @@ export class EcsFargateService extends Construct {
     const service = new ecs.FargateService(scope, `${props.serviceName}FargateService`, {
       cluster: props.cluster,
       serviceName: `${props.serviceName}Service`,
+      assignPublicIp: true,
       taskDefinition: props.taskDefinition,
       desiredCount: props.taskCount,
       minHealthyPercent: 100,

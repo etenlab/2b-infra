@@ -53,10 +53,10 @@ export class FargateTaskDefinition extends Construct {
 
     const taskDefinitionProps: ecs.FargateTaskDefinitionProps = {
       executionRole: execRole,
+      taskRole: taskRole,
       cpu: cpu,
       family: taskFamily,
       memoryLimitMiB: memory,
-      taskRole: taskRole,
     };
 
     this.taskDefinition = new ecs.FargateTaskDefinition(this, `${props.serviceName}TaskDefinition`, taskDefinitionProps);

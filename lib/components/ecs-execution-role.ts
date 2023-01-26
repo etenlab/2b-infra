@@ -1,6 +1,5 @@
 import 'source-map-support/register';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 export interface EcsExecRoleProps {
@@ -25,22 +24,16 @@ export class EcsExecutionRole extends Construct {
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           actions: [
-            'ssm:DescribeParameters',
-            'ssm:GetParameters',
-            'ssm:GetParameter',
-            'ssm:GetParameterHistory',
-            'kms:Decrypt',
+            'secretsmanager:DescribeSecret',
             'secretsmanager:GetSecretValue',
+            'logs:CreateLogStream',
+            'logs:PutLogEvents'
           ],
-          resources: ['*'],
-        }),
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: ['logs:CreateLogStream', 'logs:PutLogEvents'],
-          resources: [`arn:aws:logs:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:log-group:/ecs/*`],
+          resources: ['*']
         }),
       ],
     });
+
 
     defaultEcsExecutionPolicy.attachToRole(this.ecsExecRole);
   }

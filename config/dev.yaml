@@ -6,23 +6,27 @@ natGatewaysCount: 0
 
 vpcSsmParam: '/dev/app-vpc-id'
 defaultEcsExecRoleSsmParam: '/dev/ecs-default-execution-role'
-edefaultEcsTaskRoleSsmParam: '/dev/ecs-default-task-role'
+defaultEcsTaskRoleSsmParam: '/dev/ecs-default-task-role'
 albArnSsmParam: '/dev/alb-arn'
+albSecurityGroupSsmParam: '/dev/alb-sg-id'
+ecsClusterName: 'dev-cluster'
 
 dbCredential: 'dev/db/password'
 
 databaseApi:
-  containerPort: 3001
-  hostPort: 3001
+  containerPort: 8101
+  hostPort: 8101
   serviceName: 'databaseApi'
   dockerImageUrl: 'docker.io/etenlab/database-api:latest'
   cpu: 512
   memory: 1024
+  taskCount: 1
 
 adminApi:
-  containerPort: 4001
-  hostPort: 4001
+  containerPort: 8101
+  hostPort: 8101
   serviceName: 'adminApi'
   dockerImageUrl: 'etenlab/admin-api:latest'
   cpu: 512
   memory: 1024
+  taskCount: 2
