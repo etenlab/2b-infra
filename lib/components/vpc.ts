@@ -1,6 +1,5 @@
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
 
 export interface VpcProps {
   readonly cidr: string;
@@ -21,13 +20,18 @@ export class VPC extends Construct {
       vpcName: `app-vpc-${props.envName}`,
       subnetConfiguration: [
         {
-          cidrMask: 24,
-          name: 'Public',
+          cidrMask: 20,
+          name: 'public',
           subnetType: ec2.SubnetType.PUBLIC,
         },
         {
-          cidrMask: 24,
-          name: 'Private',
+          cidrMask: 20,
+          name: 'private-with-nat',
+          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        },
+        {
+          cidrMask: 20,
+          name: 'private-isolated',
           subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
         },
       ],

@@ -25,10 +25,10 @@ export class CommonStack extends cdk.Stack {
     super(scope, id, props);
 
     /** VPC */
-    const vpc = new VPC(this, 'AppVpc', {
+    const vpc = new VPC(this, `${props.appPrefix}AppVpc`, {
       cidr: props.cidr,
       envName: props.envName,
-      natGatewaysCount: props.natGatewaysCount,
+      natGatewaysCount: 1,
     });
 
     new ssm.StringParameter(this, `${props.appPrefix}VpcIdSSMParam`, {

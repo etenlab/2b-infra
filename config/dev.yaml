@@ -2,7 +2,7 @@ awsAccountId: '579742570368'
 awsRegion: 'us-east-2'
 
 vpcCidr: '10.0.0.0/16'
-natGatewaysCount: 0
+natGatewaysCount: 1
 
 vpcSsmParam: '/dev/app-vpc-id'
 defaultEcsExecRoleSsmParam: '/dev/ecs-default-execution-role'
@@ -11,13 +11,14 @@ albArnSsmParam: '/dev/alb-arn'
 albSecurityGroupSsmParam: '/dev/alb-sg-id'
 ecsClusterName: 'dev-cluster'
 
-dbCredential: 'dev/db/password'
+dbCredentialSecret: 'dev/db/credentials'
+dbPublicAccess: true
 
 databaseApi:
   containerPort: 8101
   hostPort: 8101
   serviceName: 'databaseApi'
-  dockerImageUrl: 'docker.io/etenlab/database-api:latest'
+  dockerImageUrl: 'etenlab/database-api'
   cpu: 512
   memory: 1024
   taskCount: 1
@@ -26,7 +27,7 @@ adminApi:
   containerPort: 8101
   hostPort: 8101
   serviceName: 'adminApi'
-  dockerImageUrl: 'etenlab/admin-api:latest'
+  dockerImageUrl: 'etenlab/admin-api'
   cpu: 512
   memory: 1024
   taskCount: 2

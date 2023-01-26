@@ -34,6 +34,8 @@ const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
   },
   envName: config.environment,
   vpcSsmParam: config.vpcSsmParam as string,
+  isPubliclyAccessible: config.dbPublicAccess as boolean,
+  dbCredentialSecret: config.dbCredentialSecret as string,
 });
 
 const databaseApiStack = new AppServiceStack(app, 'DatabaseApiStack', {
@@ -59,13 +61,28 @@ const databaseApiStack = new AppServiceStack(app, 'DatabaseApiStack', {
   secrets: [
     {
       taskDefSecretName: 'DB_PASSWORD',
-      secretsManagerSecretName: config.dbCredential as string,
+      secretsManagerSecretName: config.dbCredentialSecret as string,
       secretsMangerSecretField: 'password',
     },
     {
       taskDefSecretName: 'DB_USERNAME',
-      secretsManagerSecretName: config.dbCredential as string,
+      secretsManagerSecretName: config.dbCredentialSecret as string,
       secretsMangerSecretField: 'username',
+    },
+    {
+      taskDefSecretName: 'DB_HOST',
+      secretsManagerSecretName: config.dbCredentialSecret as string,
+      secretsMangerSecretField: 'host',
+    },
+    {
+      taskDefSecretName: 'DB_NAME',
+      secretsManagerSecretName: config.dbCredentialSecret as string,
+      secretsMangerSecretField: 'dbname',
+    },
+    {
+      taskDefSecretName: 'DB_PORT',
+      secretsManagerSecretName: config.dbCredentialSecret as string,
+      secretsMangerSecretField: 'port',
     },
   ],
 });
