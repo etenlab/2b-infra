@@ -9,25 +9,28 @@ defaultEcsExecRoleSsmParam: '/dev/ecs-default-execution-role'
 defaultEcsTaskRoleSsmParam: '/dev/ecs-default-task-role'
 albArnSsmParam: '/dev/alb-arn'
 albSecurityGroupSsmParam: '/dev/alb-sg-id'
+dbSecurityGroupSsmParam: '/dev/db-sg-id'
 ecsClusterName: 'dev-cluster'
 
 dbCredentialSecret: 'dev/db/credentials'
 dbPublicAccess: true
 
 databaseApi:
-  containerPort: 8101
-  hostPort: 8101
+  dockerPort: 8101
+  albPort: 3001
   serviceName: 'databaseApi'
   dockerImageUrl: 'etenlab/database-api'
   cpu: 512
   memory: 1024
   taskCount: 1
+  priority: 10
 
 adminApi:
-  containerPort: 8101
-  hostPort: 8101
+  dockerPort: 8101
+  albPort: 3002
   serviceName: 'adminApi'
   dockerImageUrl: 'etenlab/admin-api'
   cpu: 512
   memory: 1024
   taskCount: 2
+  priority: 20

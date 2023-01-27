@@ -15,18 +15,19 @@ export interface FargateServiceSecret {
   secretsManagerSecretName: string;
 }
 
-export interface AppServiceStackProps extends cdk.StackProps {
+export interface ApiServiceStackProps extends cdk.StackProps {
   readonly envName: string;
   readonly appPrefix: string;
 
   readonly vpcSsmParam: string;
   readonly albArnSsmParam: string;
   readonly albSecurityGroupSsmParam: string;
+  readonly dbSecurityGroupSsmParam: string;
   readonly ecsExecRoleSsmParam: string;
   readonly ecsTaskRoleSsmParam: string;
   readonly ecsClusterName: string;
-  readonly containerPort: number;
-  readonly hostPort: number;
+  readonly dockerPort: number;
+  readonly albPort: number;
   readonly healthCheckPath?: string;
   readonly serviceName: string;
   readonly dockerImageUrl: string;
@@ -36,8 +37,8 @@ export interface AppServiceStackProps extends cdk.StackProps {
   readonly secrets: FargateServiceSecret[];
 }
 
-export class AppServiceStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: AppServiceStackProps) {
+export class ApiServiceStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: ApiServiceStackProps) {
     super(scope, id, props);
 
     const vpcId = ssm.StringParameter.valueFromLookup(this, props.vpcSsmParam);
@@ -56,8 +57,11 @@ export class AppServiceStack extends cdk.Stack {
     const albArn = ssm.StringParameter.valueFromLookup(this, props.albArnSsmParam);
     const albSgId = ssm.StringParameter.valueFromLookup(this, props.albSecurityGroupSsmParam);
     const alb = elbv2.ApplicationLoadBalancer.fromLookup(this, 'Alb', { loadBalancerArn: albArn });
-
     const albSg = ec2.SecurityGroup.fromLookupById(this, 'AlbSg', albSgId);
+
+
+    const dbSgId = ssm.StringParameter.valueFromLookup(this, props.dbSecurityGroupSsmParam);
+    const dbSg= ec2.SecurityGroup.fromLookupById(this, 'DbSg', dbSgId);
 
     const cluster = ecs.Cluster.fromClusterAttributes(this, 'EcsCluster', { clusterName: props.ecsClusterName, vpc: vpc, securityGroups: [] });
 
@@ -73,8 +77,8 @@ export class AppServiceStack extends cdk.Stack {
           essential: true,
           portMappings: [
             {
-              hostPort: props.hostPort,
-              containerPort: props.containerPort,
+              hostPort: props.dockerPort,
+              containerPort: props.dockerPort,
               protocol: ecs.Protocol.TCP,
             },
           ],
@@ -91,12 +95,12 @@ export class AppServiceStack extends cdk.Stack {
       targetGroupName: `${props.serviceName}-target-group`,
       targetType: elbv2.TargetType.IP,
       protocol: elbv2.ApplicationProtocol.HTTP,
-      port: props.hostPort,
+      port: props.albPort,
       vpc: vpc,
       deregistrationDelay: cdk.Duration.seconds(30),
       healthCheck: {
         path: props.healthCheckPath || '/',
-        port: props.hostPort.toString()
+        port: 'traffic-port'
       }
     });
 
@@ -106,20 +110,27 @@ export class AppServiceStack extends cdk.Stack {
       cluster: cluster,
       targetGroup: targetGroup,
       albSecurityGroup: albSg,
+      dbSecurityGroup: dbSg,
       vpc: vpc,
       taskCount: props.serviceTasksCount,
-      ports: [ec2.Port.tcp(props.hostPort)]
+      hostPort: ec2.Port.tcp(props.albPort),
+      dbPort: ec2.Port.tcp(5432)
     })
 
 
     const listener = alb.addListener(`AlbListener`, {
       protocol: elbv2.ApplicationProtocol.HTTP, //TODO: change to HTTPS after registering domain
+      port: props.albPort,
       open: true,
+      defaultAction: elbv2.ListenerAction.fixedResponse(200, {
+        contentType: 'text/plain',
+        messageBody: 'ALB is working'
+      })
       // certificates: [elbv2.ListenerCertificate.fromArn(props.certArn)],
     });
 
     listener.addAction(`ListenerAction`, {
-      action: elbv2.ListenerAction.forward([targetGroup])
+      action: elbv2.ListenerAction.forward([targetGroup]),
     });
 
   }

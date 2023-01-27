@@ -4,7 +4,7 @@ import * as cdk from 'aws-cdk-lib';
 import { CommonStack } from '../lib/stacks/common-stack';
 import { DatabaseStack } from '../lib/stacks/database-stack';
 import { FargateServiceConfig, getConfig } from './getConfig';
-import { AppServiceStack } from '../lib/stacks/app-service-stack';
+import { ApiServiceStack } from '../lib/stacks/api-service-stack';
 
 const app = new cdk.App();
 
@@ -36,9 +36,10 @@ const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
   vpcSsmParam: config.vpcSsmParam as string,
   isPubliclyAccessible: config.dbPublicAccess as boolean,
   dbCredentialSecret: config.dbCredentialSecret as string,
+  dbSecurityGroupSsmParam: config.dbSecurityGroupSsmParam as string,
 });
 
-const databaseApiStack = new AppServiceStack(app, 'DatabaseApiStack', {
+const databaseApiStack = new ApiServiceStack(app, 'DatabaseApiStack', {
   env: {
     account: config.awsAccountId,
     region: config.awsRegion,
@@ -47,12 +48,13 @@ const databaseApiStack = new AppServiceStack(app, 'DatabaseApiStack', {
   appPrefix: 'cb',
   albArnSsmParam: config.albArnSsmParam as string,
   albSecurityGroupSsmParam: config.albSecurityGroupSsmParam as string,
+  dbSecurityGroupSsmParam: config.dbSecurityGroupSsmParam as string,
   vpcSsmParam: config.vpcSsmParam as string,
   ecsExecRoleSsmParam: config.defaultEcsExecRoleSsmParam as string,
   ecsTaskRoleSsmParam: config.defaultEcsTaskRoleSsmParam as string,
   ecsClusterName: config.ecsClusterName as string,
-  containerPort: (config.databaseApi as FargateServiceConfig).containerPort,
-  hostPort: (config.databaseApi as FargateServiceConfig).hostPort,
+  dockerPort: (config.databaseApi as FargateServiceConfig).dockerPort,
+  albPort: (config.databaseApi as FargateServiceConfig).albPort,
   serviceName: (config.databaseApi as FargateServiceConfig).serviceName,
   dockerImageUrl: (config.databaseApi as FargateServiceConfig).dockerImageUrl,
   cpu: (config.databaseApi as FargateServiceConfig).cpu,
@@ -87,7 +89,7 @@ const databaseApiStack = new AppServiceStack(app, 'DatabaseApiStack', {
   ],
 });
 
-const adminApiStack = new AppServiceStack(app, 'AdminApiStack', {
+const adminApiStack = new ApiServiceStack(app, 'AdminApiStack', {
   env: {
     account: config.awsAccountId,
     region: config.awsRegion,
@@ -96,16 +98,43 @@ const adminApiStack = new AppServiceStack(app, 'AdminApiStack', {
   appPrefix: 'cb',
   albArnSsmParam: config.albArnSsmParam as string,
   albSecurityGroupSsmParam: config.albSecurityGroupSsmParam as string,
+  dbSecurityGroupSsmParam: config.dbSecurityGroupSsmParam as string,
   vpcSsmParam: config.vpcSsmParam as string,
   ecsExecRoleSsmParam: config.defaultEcsExecRoleSsmParam as string,
   ecsTaskRoleSsmParam: config.defaultEcsTaskRoleSsmParam as string,
   ecsClusterName: config.ecsClusterName as string,
-  containerPort: (config.adminApi as FargateServiceConfig).containerPort,
-  hostPort: (config.adminApi as FargateServiceConfig).hostPort,
+  dockerPort: (config.adminApi as FargateServiceConfig).dockerPort,
+  albPort: (config.adminApi as FargateServiceConfig).albPort,
   serviceName: (config.adminApi as FargateServiceConfig).serviceName,
   dockerImageUrl: (config.adminApi as FargateServiceConfig).dockerImageUrl,
   cpu: (config.adminApi as FargateServiceConfig).cpu,
   memory: (config.adminApi as FargateServiceConfig).memory,
   serviceTasksCount: (config.databaseApi as FargateServiceConfig).taskCount,
-  secrets: [],
+  secrets: [
+    {
+      taskDefSecretName: 'DB_PASSWORD',
+      secretsManagerSecretName: config.dbCredentialSecret as string,
+      secretsMangerSecretField: 'password',
+    },
+    {
+      taskDefSecretName: 'DB_USERNAME',
+      secretsManagerSecretName: config.dbCredentialSecret as string,
+      secretsMangerSecretField: 'username',
+    },
+    {
+      taskDefSecretName: 'DB_HOST',
+      secretsManagerSecretName: config.dbCredentialSecret as string,
+      secretsMangerSecretField: 'host',
+    },
+    {
+      taskDefSecretName: 'DB_NAME',
+      secretsManagerSecretName: config.dbCredentialSecret as string,
+      secretsMangerSecretField: 'dbname',
+    },
+    {
+      taskDefSecretName: 'DB_PORT',
+      secretsManagerSecretName: config.dbCredentialSecret as string,
+      secretsMangerSecretField: 'port',
+    },
+  ],
 });

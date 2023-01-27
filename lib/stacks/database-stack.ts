@@ -9,6 +9,7 @@ export interface DatabaseStackProps extends cdk.StackProps {
   readonly vpcSsmParam: string;
   readonly isPubliclyAccessible: boolean;
   readonly dbCredentialSecret: string;
+  readonly dbSecurityGroupSsmParam: string;
 }
 
 export class DatabaseStack extends cdk.Stack {
@@ -70,5 +71,11 @@ export class DatabaseStack extends cdk.Stack {
       minCapacity: 0.5,
       maxCapacity: 4,
     };
+
+    new ssm.StringParameter(this, 'DbSecurityGroup', {
+      stringValue: databaseSg.securityGroupId,
+      description: 'Database security group',
+      parameterName: props.dbSecurityGroupSsmParam,
+    });
   }
 }

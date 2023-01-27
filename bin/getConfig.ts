@@ -11,13 +11,13 @@ export interface EnvConfig {
 }
 
 export interface FargateServiceConfig {
-  containerPort: number;
-  hostPort: number;
+  dockerPort: number;
+  albPort: number;
   serviceName: string;
   dockerImageUrl: string;
   cpu: number;
   memory: number;
-  taskCount: number
+  taskCount: number;
 }
 
 /**

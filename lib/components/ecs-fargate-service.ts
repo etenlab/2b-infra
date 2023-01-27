@@ -11,9 +11,11 @@ export interface FargateServiceProps {
   cluster: ecs.ICluster;
   targetGroup: elbv2.ApplicationTargetGroup;
   albSecurityGroup: ec2.ISecurityGroup;
+  dbSecurityGroup: ec2.ISecurityGroup;
   vpc: ec2.IVpc;
   taskCount: number;
-  ports: ec2.Port[];
+  dbPort: ec2.Port;
+  hostPort: ec2.Port;
 }
 
 export class EcsFargateService extends Construct {
@@ -28,9 +30,10 @@ export class EcsFargateService extends Construct {
       securityGroupName: `${props.serviceName}-service-sg`,
     });
 
-    props.ports.forEach((port) => {
-      serviceSg.addIngressRule(props.albSecurityGroup, port, `Service ALB Access port ${port.toString()}`);
-    });
+    serviceSg.addIngressRule(props.albSecurityGroup, props.hostPort, `Allows ALB to ECS connection on port ${props.hostPort.toString()}`)
+
+    props.dbSecurityGroup.addIngressRule(serviceSg,props.dbPort, `Allows ECS to DB connection on port ${props.dbPort.toString()}`)
+
 
     const service = new ecs.FargateService(scope, `${props.serviceName}FargateService`, {
       cluster: props.cluster,

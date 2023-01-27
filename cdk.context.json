@@ -99,5 +99,10 @@
   "security-group:account=579742570368:region=us-east-2:securityGroupId=sg-04148ad16938cb599": {
     "securityGroupId": "sg-04148ad16938cb599",
     "allowAllOutbound": false
+  },
+  "ssm:account=579742570368:parameterName=/dev/db-sg-id:region=us-east-2": "sg-01cea8347fa3e2887",
+  "security-group:account=579742570368:region=us-east-2:securityGroupId=sg-01cea8347fa3e2887": {
+    "securityGroupId": "sg-01cea8347fa3e2887",
+    "allowAllOutbound": false
   }
 }
