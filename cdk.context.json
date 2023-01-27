@@ -7,6 +7,7 @@
   "ssm:account=579742570368:parameterName=/dev/app-vpc-id:region=us-east-2": "vpc-0d909366986aa2805",
   "ssm:account=579742570368:parameterName=/dev/alb-arn:region=us-east-2": "arn:aws:elasticloadbalancing:us-east-2:579742570368:loadbalancer/app/dev-alb/c2c029d2747c987d",
   "ssm:account=579742570368:parameterName=/dev/alb-sg-id:region=us-east-2": "sg-04148ad16938cb599",
+  "ssm:account=579742570368:parameterName=/dev/db-sg-id:region=us-east-2": "sg-01cea8347fa3e2887",
   "vpc-provider:account=579742570368:filter.vpc-id=vpc-0d909366986aa2805:region=us-east-2:returnAsymmetricSubnets=true": {
     "vpcId": "vpc-0d909366986aa2805",
     "vpcCidrBlock": "10.0.0.0/16",
@@ -100,9 +101,12 @@
     "securityGroupId": "sg-04148ad16938cb599",
     "allowAllOutbound": false
   },
-  "ssm:account=579742570368:parameterName=/dev/db-sg-id:region=us-east-2": "sg-01cea8347fa3e2887",
   "security-group:account=579742570368:region=us-east-2:securityGroupId=sg-01cea8347fa3e2887": {
     "securityGroupId": "sg-01cea8347fa3e2887",
     "allowAllOutbound": false
+  },
+  "hosted-zone:account=579742570368:domainName=crowd.bible:region=us-east-2": {
+    "Id": "/hostedzone/Z05173978YIDIGYXIW29",
+    "Name": "crowd.bible."
   }
 }

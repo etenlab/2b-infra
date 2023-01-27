@@ -2,6 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import { ApplicationLoadBalancer } from '../components/application-load-balancer';
 import { VPC } from '../components/vpc';
 import { EcsExecutionRole } from '../components/ecs-execution-role';
@@ -13,11 +15,13 @@ export interface CommonStackProps extends cdk.StackProps {
   readonly vpcSsmParam: string;
   readonly ecsExecRoleSsmParam: string;
   readonly ecsTaskRoleSsmParam: string;
+  readonly domainCertSsmParam: string;
   readonly ecsClusterName: string;
   readonly albArnSsmParam: string;
   readonly albSecurityGroupSsmParam: string;
   readonly natGatewaysCount: number;
   readonly appPrefix: string;
+  readonly rootDomainName: string
 }
 
 export class CommonStack extends cdk.Stack {
@@ -81,6 +85,24 @@ export class CommonStack extends cdk.Stack {
       stringValue: defaultTaskRole.getRoleArn(),
       description: 'Default ECS task role',
       parameterName: props.ecsTaskRoleSsmParam,
+    });
+
+    /** Route53 hosted zone */
+    const rootHostedZone = new route53.PublicHostedZone(this, `${props.appPrefix}PublicHz`, {
+      zoneName: props.rootDomainName,
+      comment: 'Public root hosted zone',
+    });
+
+    const certificate = new acm.Certificate(this, `${props.appPrefix}RootCert`, {
+      domainName: props.rootDomainName,
+      subjectAlternativeNames: [`*.${props.rootDomainName}`],
+      validation: acm.CertificateValidation.fromDns(rootHostedZone),
+    });
+
+    new ssm.StringParameter(this, `${props.appPrefix}CertSsmParam`, {
+      stringValue: certificate.certificateArn,
+      description: `Certificate arn for ${props.rootDomainName}`,
+      parameterName: props.domainCertSsmParam,
     });
   }
 }

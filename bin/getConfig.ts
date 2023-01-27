@@ -12,12 +12,14 @@ export interface EnvConfig {
 
 export interface FargateServiceConfig {
   dockerPort: number;
+  subdomain: string;
   albPort: number;
   serviceName: string;
   dockerImageUrl: string;
   cpu: number;
   memory: number;
   taskCount: number;
+  environment: Record<string, any>[];
 }
 
 export interface FrontendAppConfig {

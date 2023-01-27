@@ -5,6 +5,8 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
 
 import { FargateTaskDefinition } from '../components/ecs-task-definition';
 import { EcsFargateService } from '../components/ecs-fargate-service';
@@ -20,6 +22,9 @@ export interface ApiServiceStackProps extends cdk.StackProps {
   readonly appPrefix: string;
 
   readonly vpcSsmParam: string;
+  readonly domainCertSsmParam: string;
+  readonly rootDomainName: string;
+  readonly subdomain: string;
   readonly albArnSsmParam: string;
   readonly albSecurityGroupSsmParam: string;
   readonly dbSecurityGroupSsmParam: string;
@@ -35,6 +40,7 @@ export interface ApiServiceStackProps extends cdk.StackProps {
   readonly memory: number;
   readonly serviceTasksCount: number;
   readonly secrets: FargateServiceSecret[];
+  readonly environmentVars: Record<string, string>[];
 }
 
 export class ApiServiceStack extends cdk.Stack {
@@ -54,6 +60,18 @@ export class ApiServiceStack extends cdk.Stack {
       secrets[secret.taskDefSecretName] = ecs.Secret.fromSecretsManager(secretsManagerSecret, secret.secretsMangerSecretField);
     }
 
+    const environment: Record<string, string> = {
+      ENV: props.envName,
+      SERVICE: props.serviceName,
+    }
+
+    for (const envVar of props.environmentVars) {
+      for (const [key, value] of Object.entries(envVar)) {
+        const varName = key as string;
+        environment[varName] = value.toString()
+      }
+    }
+
     const albArn = ssm.StringParameter.valueFromLookup(this, props.albArnSsmParam);
     const albSgId = ssm.StringParameter.valueFromLookup(this, props.albSecurityGroupSsmParam);
     const alb = elbv2.ApplicationLoadBalancer.fromLookup(this, 'Alb', { loadBalancerArn: albArn });
@@ -61,9 +79,11 @@ export class ApiServiceStack extends cdk.Stack {
 
 
     const dbSgId = ssm.StringParameter.valueFromLookup(this, props.dbSecurityGroupSsmParam);
-    const dbSg= ec2.SecurityGroup.fromLookupById(this, 'DbSg', dbSgId);
+    const dbSg = ec2.SecurityGroup.fromLookupById(this, 'DbSg', dbSgId);
 
     const cluster = ecs.Cluster.fromClusterAttributes(this, 'EcsCluster', { clusterName: props.ecsClusterName, vpc: vpc, securityGroups: [] });
+
+    const domainCertArn = ssm.StringParameter.valueForStringParameter(this, props.domainCertSsmParam);
 
     const taskDefinition = new FargateTaskDefinition(this, `FargateTaskDefinition`, {
       serviceName: props.serviceName,
@@ -83,10 +103,7 @@ export class ApiServiceStack extends cdk.Stack {
             },
           ],
           secrets: secrets,
-          environment: {
-            ENV: props.envName,
-            SERVICE: props.serviceName,
-          },
+          environment: environment,
         },
       ],
     });
@@ -119,18 +136,30 @@ export class ApiServiceStack extends cdk.Stack {
 
 
     const listener = alb.addListener(`AlbListener`, {
-      protocol: elbv2.ApplicationProtocol.HTTP, //TODO: change to HTTPS after registering domain
+      protocol: elbv2.ApplicationProtocol.HTTPS,
       port: props.albPort,
       open: true,
       defaultAction: elbv2.ListenerAction.fixedResponse(200, {
         contentType: 'text/plain',
         messageBody: 'ALB is working'
-      })
-      // certificates: [elbv2.ListenerCertificate.fromArn(props.certArn)],
+      }),
+      certificates: [elbv2.ListenerCertificate.fromArn(domainCertArn)],
     });
 
-    listener.addAction(`ListenerAction`, {
+    listener.addAction('ListenerAction', {
       action: elbv2.ListenerAction.forward([targetGroup]),
+    });
+
+    const rootHostedZone = route53.HostedZone.fromLookup(this, 'RootHostedZone', {
+      domainName: props.rootDomainName
+    });
+
+    new route53.ARecord(this, 'AlbAliasRecord', {
+      zone: rootHostedZone,
+      recordName: props.subdomain,
+      target: route53.RecordTarget.fromAlias(
+        new route53Targets.LoadBalancerTarget(alb)
+      )
     });
 
   }

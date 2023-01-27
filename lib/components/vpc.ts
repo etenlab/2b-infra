@@ -24,11 +24,11 @@ export class VPC extends Construct {
           name: 'public',
           subnetType: ec2.SubnetType.PUBLIC,
         },
-        // {
-        //   cidrMask: 20,
-        //   name: 'private-with-nat',
-        //   subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
-        // },
+        {
+          cidrMask: 20,
+          name: 'private-with-nat',
+          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        },
         {
           cidrMask: 20,
           name: 'private-isolated',

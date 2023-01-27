@@ -2,7 +2,8 @@ awsAccountId: '579742570368'
 awsRegion: 'us-east-2'
 
 vpcCidr: '10.0.0.0/16'
-natGatewaysCount: 1
+natGatewaysCount: 0
+rootDomainName: 'crowd.bible'
 
 vpcSsmParam: '/dev/app-vpc-id'
 defaultEcsExecRoleSsmParam: '/dev/ecs-default-execution-role'
@@ -10,6 +11,8 @@ defaultEcsTaskRoleSsmParam: '/dev/ecs-default-task-role'
 albArnSsmParam: '/dev/alb-arn'
 albSecurityGroupSsmParam: '/dev/alb-sg-id'
 dbSecurityGroupSsmParam: '/dev/db-sg-id'
+domainCertSsmParam: '/dev/root-domain-certificate'
+
 ecsClusterName: 'dev-cluster'
 
 dbCredentialSecret: 'dev/db/credentials'
@@ -21,19 +24,27 @@ showcaseApp:
 databaseApi:
   dockerPort: 8101
   albPort: 3001
+  subdomain: 'db'
   serviceName: 'databaseApi'
   dockerImageUrl: 'etenlab/database-api'
   cpu: 512
   memory: 1024
   taskCount: 1
   priority: 10
+  environment:
+    - PORT: 8101
+    - RUN_MIGRATIONS: false
 
 adminApi:
   dockerPort: 8101
   albPort: 3002
+  subdomain: 'admin'
   serviceName: 'adminApi'
   dockerImageUrl: 'etenlab/admin-api'
   cpu: 512
   memory: 1024
   taskCount: 2
   priority: 20
+  environment:
+    - PORT: 8101
+    - RUN_MIGRATIONS: false
