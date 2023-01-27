@@ -3,8 +3,9 @@ import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { CommonStack } from '../lib/stacks/common-stack';
 import { DatabaseStack } from '../lib/stacks/database-stack';
-import { FargateServiceConfig, getConfig } from './getConfig';
+import { FargateServiceConfig, FrontendAppConfig, getConfig } from './getConfig';
 import { ApiServiceStack } from '../lib/stacks/api-service-stack';
+import { FrontendStack } from '../lib/stacks/frontend-stack';
 
 const app = new cdk.App();
 
@@ -37,6 +38,15 @@ const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
   isPubliclyAccessible: config.dbPublicAccess as boolean,
   dbCredentialSecret: config.dbCredentialSecret as string,
   dbSecurityGroupSsmParam: config.dbSecurityGroupSsmParam as string,
+});
+
+const showcaseAppStack = new FrontendStack(app, 'ShowcaseApp', {
+  env: {
+    account: config.awsAccountId,
+    region: config.awsRegion,
+  },
+  envName: config.environment,
+  domainName: (config.showcaseApp as FrontendAppConfig).domainName
 });
 
 const databaseApiStack = new ApiServiceStack(app, 'DatabaseApiStack', {

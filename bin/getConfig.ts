@@ -20,6 +20,10 @@ export interface FargateServiceConfig {
   taskCount: number;
 }
 
+export interface FrontendAppConfig {
+  domainName: string;
+}
+
 /**
  * Gets variable value from CDK context
  *

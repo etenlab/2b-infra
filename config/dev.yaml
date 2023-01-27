@@ -15,6 +15,9 @@ ecsClusterName: 'dev-cluster'
 dbCredentialSecret: 'dev/db/credentials'
 dbPublicAccess: true
 
+showcaseApp:
+  domainName: 'showcase.dev.lab.eten.bible'
+
 databaseApi:
   dockerPort: 8101
   albPort: 3001
