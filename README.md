@@ -16,7 +16,7 @@ The project consists of several CloudFormation stacks:
 1. Install project dependencies: `npm install`.
 2. Make sure your AWS CLI is configured with correct credentials.
 3. Deploy stack/s of your choice:
-   To deploy all stacks: `cdk deploy -c env=dev`. Make sure to specify desired environment name.
+   To deploy all stacks: `cdk deploy -c env=dev --all`. Make sure to specify desired environment name.
    To deploy single stack: `cdk deploy -c env=dev CommonStack`.
    To deploy several stacks: `cdk deploy -c env=dev DatabaseApiStack, AdminApiStack`.
 

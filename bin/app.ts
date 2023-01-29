@@ -48,7 +48,8 @@ const showcaseAppStack = new FrontendStack(app, 'ShowcaseApp', {
     region: config.awsRegion,
   },
   envName: config.environment,
-  domainName: (config.showcaseApp as FrontendAppConfig).domainName
+  domainName: (config.showcaseApp as FrontendAppConfig).domainName,
+  rootDomainName: config.rootDomainName as string,
 });
 
 const databaseApiStack = new ApiServiceStack(app, 'DatabaseApiStack', {

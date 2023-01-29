@@ -19,7 +19,7 @@ dbCredentialSecret: 'dev/db/credentials'
 dbPublicAccess: true
 
 showcaseApp:
-  domainName: 'showcase.dev.lab.eten.bible'
+  domainName: 'showcase.crowd.bible'
 
 databaseApi:
   dockerPort: 8101
