@@ -43,7 +43,7 @@ const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
   dbSecurityGroupSsmParam: config.dbSecurityGroupSsmParam as string,
 });
 
-const showcaseAppStack = new FrontendStack(app, 'ShowcaseApp', {
+const showcaseAppStack = new FrontendStack(app, 'ShowcaseAppStack', {
   env: {
     account: config.awsAccountId,
     region: config.awsRegion,

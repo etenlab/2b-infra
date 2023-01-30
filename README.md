@@ -11,14 +11,18 @@ The project consists of several CloudFormation stacks:
 3. `N * ApiServiceStack` - deploys project APIs hosted on ECS
 4. `N * FrontendStack` - deploys project frontends hosted on S3 + CloudFront
 
-## How to deploy
+## First-time deployment
 
-1. Install project dependencies: `npm install`.
-2. Make sure your AWS CLI is configured with correct credentials.
-3. Deploy stack/s of your choice:
-   To deploy all stacks: `cdk deploy -c env=dev --all`. Make sure to specify desired environment name.
-   To deploy single stack: `cdk deploy -c env=dev CommonStack`.
-   To deploy several stacks: `cdk deploy -c env=dev DatabaseApiStack, AdminApiStack`.
+1. Configured your AWS CLI with correct credentials. See [AWS CLI Configuration basics](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) for reference.
+2. Bootstrap CDK project in your AWS account if you have not done so already. See [CDK Bootstrapping docs](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) for reference.
+3. Install project dependencies: `npm install`.
+4. Check environment configuration in `./config/dev.yaml` for developnet environment. Use `./config/prod.yaml` for production.
+5. Deploy Common stack: `cdk deploy -c env=dev CommonStack`
+6. Find deployed Route53 hosted zone and add NS records to your DNS provider.
+7. Deploy Database stack `cdk deploy -c env=dev DatabaseStack`
+8. Deploy other stack/s of your choice:
+   - single stack: `cdk deploy -c env=dev CommonStack`.
+   - several stacks: `cdk deploy -c env=dev DatabaseApiStack, AdminApiStack`.
 
 ## Useful commands
 
