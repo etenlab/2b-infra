@@ -3,9 +3,11 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 export interface EcsExecRoleProps {
+  /** Name of the deployed environment */
   envName: string;
 }
 
+/** Creates a default execution role used by all ESC services to launch tasks */
 export class EcsExecutionRole extends Construct {
   private ecsExecRole: iam.Role;
 

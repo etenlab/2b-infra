@@ -5,10 +5,7 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 
-import { ApplicationLoadBalancer } from '../components/application-load-balancer';
-import { VPC } from '../components/vpc';
-import { EcsExecutionRole } from '../components/ecs-execution-role';
-import { EcsTaskRole } from '../components/ecs-task-role';
+import { EcsExecutionRole, EcsTaskRole, ApplicationLoadBalancer, ProjectVpc } from '../components';
 
 /**
  * Properties required to create shared project infrastructure
@@ -17,7 +14,7 @@ export interface CommonStackProps extends cdk.StackProps {
   /** Name of the application assigned to logical id of CloudFormation components */
   readonly appPrefix: string;
 
-  /** Name of the deployed environmend */
+  /** Name of the deployed environment */
   readonly envName: string;
 
   /** VPC CIDR block */
@@ -65,9 +62,9 @@ export class CommonStack extends cdk.Stack {
     super(scope, id, props);
 
     /** VPC */
-    const vpc = new VPC(this, `${props.appPrefix}AppVpc`, {
+    const vpc = new ProjectVpc(this, `${props.appPrefix}AppVpc`, {
       cidr: props.cidr,
-      envName: props.envName,
+      vpcName: `${props.envName}-vpc`,
       natGatewaysCount: props.natGatewaysCount,
     });
 
@@ -79,11 +76,8 @@ export class CommonStack extends cdk.Stack {
 
     /** Load balancer */
     const alb = new ApplicationLoadBalancer(this, `${props.appPrefix}Alb`, {
-      envName: props.envName,
-      vpc: vpc.getVpc(),
-      certArn: 'string',
-      healthCheckPath: '/healthcheck',
-      healthCheckPort: '8080',
+      loadBalancerName: `${props.envName}-alb`,
+      vpc: vpc.getVpc()
     });
 
     new ssm.StringParameter(this, `${props.appPrefix}AlbSsmParam`, {

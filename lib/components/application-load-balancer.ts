@@ -4,14 +4,20 @@ import * as cdk from 'aws-cdk-lib';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { Construct } from 'constructs';
 
+/**
+ * Properties required to create an Application Load Balancer
+ */
 export interface AppLoadBalancerProps {
-  envName: string;
+  /** Name of the ALB */
+  loadBalancerName: string;
+
+  /** VPC to create ALB into */
   vpc: ec2.IVpc;
-  certArn: string;
-  healthCheckPath?: string;
-  healthCheckPort?: string;
 }
 
+/**
+ * Creates internet-facing application load balancer
+ */
 export class ApplicationLoadBalancer extends Construct {
   private alb: elbv2.ApplicationLoadBalancer;
 
@@ -20,16 +26,16 @@ export class ApplicationLoadBalancer extends Construct {
   constructor(scope: Construct, id: string, props: AppLoadBalancerProps) {
     super(scope, id);
 
-    this.albSecurityGroup = new ec2.SecurityGroup(this, `${props.envName}AlbSg`, {
+    this.albSecurityGroup = new ec2.SecurityGroup(this, `${props.loadBalancerName}Sg`, {
       vpc: props.vpc,
-      description: `${props.envName} ALB security group`,
-      securityGroupName: `${props.envName}-alb-sg`,
+      description: `${props.loadBalancerName} ALB security group`,
+      securityGroupName: `${props.loadBalancerName}-alb-sg`,
     });
 
     this.alb = new elbv2.ApplicationLoadBalancer(this, 'ALB', {
       vpc: props.vpc,
       internetFacing: true,
-      loadBalancerName: `${props.envName}-alb`,
+      loadBalancerName: props.loadBalancerName,
       securityGroup: this.albSecurityGroup,
       ipAddressType: elbv2.IpAddressType.IPV4,
       vpcSubnets: {
@@ -39,15 +45,15 @@ export class ApplicationLoadBalancer extends Construct {
     });
   }
 
-  public getAlb():  elbv2.ApplicationLoadBalancer {
+  public getAlb(): elbv2.ApplicationLoadBalancer {
     return this.alb
   }
 
-  public getAlbArn():  string {
+  public getAlbArn(): string {
     return this.alb.loadBalancerArn
   }
 
-  public getAlbSecurityGroupId():  string {
+  public getAlbSecurityGroupId(): string {
     return this.albSecurityGroup.securityGroupId
   }
 }

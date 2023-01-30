@@ -6,10 +6,8 @@ import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
 
-import { FargateTaskDefinition } from '../components/ecs-task-definition';
-import { EcsFargateService } from '../components/ecs-fargate-service';
-
-import { importEcsSecrets, FargateServiceSecret, importVpc, importAlb, importSg, importHostedZone, importAlbCertificate } from '../helpers'
+import { EcsFargateService, FargateTaskDefinition } from '../components';
+import { importEcsSecrets, FargateServiceSecret, importVpc, importAlb, importSg, importHostedZone, importAlbCertificate, importIamRole } from '../helpers'
 
 export interface ApiServiceStackProps extends cdk.StackProps {
   /** Name of the application assigned to logical id of CloudFormation components */
@@ -18,7 +16,7 @@ export interface ApiServiceStackProps extends cdk.StackProps {
   /** Name of the deployed environmend */
   readonly envName: string;
 
-  /** Name used to identify deployed service */
+  /** Name used to identify the deployed service */
   readonly serviceName: string;
 
   /** SSM param name storing VPC id */
@@ -97,6 +95,8 @@ export class ApiServiceStack extends cdk.Stack {
     const dbSg = importSg(this, props.dbSecurityGroupSsmParam, `${props.appPrefix}DbSg`)
     const rootHostedZone = importHostedZone(this, props.rootDomainName, `${props.appPrefix}RootHz`)
     const listenerCertificate = importAlbCertificate(this, props.domainCertSsmParam)
+    const execRole = importIamRole(this, props.ecsExecRoleSsmParam, `${props.appPrefix}ExecRole`);
+    const taskRole = importIamRole(this, props.ecsTaskRoleSsmParam, `${props.appPrefix}TaskRole`);
 
     const cluster = ecs.Cluster.fromClusterAttributes(this, `${props.appPrefix}EcsCluster`, { clusterName: props.ecsClusterName, vpc, securityGroups: [] });
 
@@ -117,26 +117,24 @@ export class ApiServiceStack extends cdk.Stack {
     const taskDefinition = new FargateTaskDefinition(this, `${props.serviceName}FargateTaskDef`, {
       serviceName: props.serviceName,
       dockerImageUrl: props.dockerImageUrl,
-      envName: props.envName,
-      ecsDefExecRoleSsmParam: props.ecsExecRoleSsmParam,
-      ecsDefTaskRoleSsmParam: props.ecsTaskRoleSsmParam,
+      ecsDefExecRole: execRole,
+      ecsDefTaskRole: taskRole,
       cpu: props.cpu,
       memory: props.memory,
-      containerDefinitions: [
-        {
-          name: props.serviceName,
-          essential: true,
-          portMappings: [
-            {
-              hostPort: props.dockerPort,
-              containerPort: props.dockerPort,
-              protocol: ecs.Protocol.TCP,
-            },
-          ],
-          secrets,
-          environment,
-        },
-      ],
+      containerDefinition:
+      {
+        name: props.serviceName,
+        essential: true,
+        portMappings: [
+          {
+            hostPort: props.dockerPort,
+            containerPort: props.dockerPort,
+            protocol: ecs.Protocol.TCP,
+          },
+        ],
+        secrets,
+        environment,
+      },
     });
 
     /** Create ALB target group */

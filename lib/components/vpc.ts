@@ -1,23 +1,34 @@
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 
+/**
+ * Properties required to create a VPC
+ */
 export interface VpcProps {
+  /** CIDR block */
   readonly cidr: string;
-  readonly envName: string;
+
+  /** VPC name */
+  readonly vpcName: string;
+
+  /** Number of Nat Gateways to create. Set to zero if not required. */
   readonly natGatewaysCount: number;
 }
 
-export class VPC extends Construct {
+/**
+ * Creates a VPC to deploy project services
+ */
+export class ProjectVpc extends Construct {
   private vpc: ec2.Vpc;
 
   constructor(scope: Construct, id: string, props: VpcProps) {
     super(scope, id);
 
-    this.vpc = new ec2.Vpc(this, 'Vpc', {
+    this.vpc = new ec2.Vpc(this, props.vpcName, {
       ipAddresses: ec2.IpAddresses.cidr(props.cidr),
       maxAzs: 3,
       natGateways: props.natGatewaysCount,
-      vpcName: `app-vpc-${props.envName}`,
+      vpcName: props.vpcName,
       subnetConfiguration: [
         {
           cidrMask: 20,

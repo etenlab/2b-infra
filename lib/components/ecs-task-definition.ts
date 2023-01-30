@@ -3,32 +3,61 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 
+/** Properties required to create task container */
 export interface FargateContainerDefinition {
+  /** Name used to identify task container */
   name: string;
+
+  /** If essential container fails or stops, all other containers that are part of the task are stopped */
   essential: boolean;
-  portMappings?: ecs.PortMapping[];
-  environment?: any;
-  secrets?: any;
-  dockerLabels?: any;
+
+  /** Map of container and host ports to allow the traffic between */
+  portMappings: ecs.PortMapping[];
+
+  /** List of task environment variables */
+  environment: { [key: string]: string };
+
+  /** List of task secrets */
+  secrets: { [key: string]: ecs.Secret; };
+
+  /** List of container docker labels */
+  dockerLabels?: { [key: string]: string; };
 }
 
+/**
+ * Properties required to create Fargate task definition
+ */
 export interface FargateTaskDefinitionProps {
+  /** Name used to identify the deployed service */
   serviceName: string;
-  envName: string;
-  ecsDefExecRoleSsmParam: string;
-  ecsDefTaskRoleSsmParam: string;
+
+  /** Execution role ECS will use to manage the task */
+  ecsDefExecRole: iam.IRole;
+
+  /** Task role running app will use to access other AWS resources */
+  ecsDefTaskRole: iam.IRole;
+
+  /** Docker image from public registry */
   dockerImageUrl: string;
+
+  /** The name of a family that this task definition is registered to */
   family?: string;
-  containerDefinitions: FargateContainerDefinition[];
+
+  /** Properties required to create task container */
+  containerDefinition: FargateContainerDefinition;
+
+  /** Task CPU setting in MiB */
   cpu?: number;
+
+  /** Task memory setting in MiB */
   memory?: number;
-  executionRoleArn?: string;
-  taskRoleArn?: string;
 }
 
+/**
+ * Creates Fargate task definition
+ */
 export class FargateTaskDefinition extends Construct {
   private taskDefinition: ecs.FargateTaskDefinition;
 
@@ -39,21 +68,13 @@ export class FargateTaskDefinition extends Construct {
   constructor(scope: Construct, id: string, props: FargateTaskDefinitionProps) {
     super(scope, id);
 
-    const executionRoleArn =
-      props.executionRoleArn || ssm.StringParameter.fromStringParameterName(this, 'EcsExecRoleArn', props.ecsDefExecRoleSsmParam).stringValue;
-    const taskRoleArn =
-      props.taskRoleArn || ssm.StringParameter.fromStringParameterName(this, 'EcsTaskRoleArn', props.ecsDefTaskRoleSsmParam).stringValue;
-
-    const execRole = iam.Role.fromRoleArn(this, 'ExecutionRole', executionRoleArn);
-    const taskRole = iam.Role.fromRoleArn(this, 'TaskRole', taskRoleArn);
-
     const cpu = props.cpu || this.defaultCpu;
     const memory = props.memory || this.defaultMemory;
     const taskFamily = props.family || props.serviceName;
 
     const taskDefinitionProps: ecs.FargateTaskDefinitionProps = {
-      executionRole: execRole,
-      taskRole,
+      executionRole: props.ecsDefExecRole,
+      taskRole: props.ecsDefTaskRole,
       cpu,
       family: taskFamily,
       memoryLimitMiB: memory,
@@ -61,32 +82,30 @@ export class FargateTaskDefinition extends Construct {
 
     this.taskDefinition = new ecs.FargateTaskDefinition(this, `${props.serviceName}TaskDefinition`, taskDefinitionProps);
 
-    for (const definition of props.containerDefinitions) {
-      const logGroup = new logs.LogGroup(this, `${definition.name}ContainerLogGroup`, {
-        logGroupName: `/ecs/${definition.name}`,
-        retention: logs.RetentionDays.ONE_MONTH,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-      });
+    const logGroup = new logs.LogGroup(this, `${props.containerDefinition.name}ContainerLogGroup`, {
+      logGroupName: `/ecs/${props.containerDefinition.name}`,
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
 
-      const containerDefinitionProps: ecs.ContainerDefinitionProps = {
-        taskDefinition: this.taskDefinition,
-        image: ecs.ContainerImage.fromRegistry(props.dockerImageUrl),
-        essential: definition.essential,
-        logging: ecs.LogDriver.awsLogs({
-          streamPrefix: 'ecs',
-          logGroup,
-        }),
-        environment: definition.environment,
-        secrets: definition.secrets,
-        dockerLabels: definition.dockerLabels,
-      };
+    const containerDefinitionProps: ecs.ContainerDefinitionProps = {
+      taskDefinition: this.taskDefinition,
+      image: ecs.ContainerImage.fromRegistry(props.dockerImageUrl),
+      essential: props.containerDefinition.essential,
+      logging: ecs.LogDriver.awsLogs({
+        streamPrefix: 'ecs',
+        logGroup,
+      }),
+      environment: props.containerDefinition.environment,
+      secrets: props.containerDefinition.secrets,
+      dockerLabels: props.containerDefinition.dockerLabels,
+    };
 
-      const taskContainer = this.taskDefinition.addContainer(definition.name, containerDefinitionProps);
+    const taskContainer = this.taskDefinition.addContainer(props.containerDefinition.name, containerDefinitionProps);
 
-      definition.portMappings?.forEach((mapping) => {
-        taskContainer.addPortMappings(mapping);
-      });
-    }
+    props.containerDefinition.portMappings?.forEach((mapping) => {
+      taskContainer.addPortMappings(mapping);
+    });
   }
 
   public getFargateTaskDefinition(): ecs.FargateTaskDefinition {

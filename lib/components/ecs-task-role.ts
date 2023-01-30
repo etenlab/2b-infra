@@ -4,9 +4,11 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 export interface EcsTaskRoleProps {
+  /** Name of the deployed environment */
   envName: string;
 }
 
+/** Creates a default task role used by all ESC services to run application */
 export class EcsTaskRole extends Construct {
   private ecsTaskRole: iam.Role;
 
