@@ -14,6 +14,7 @@ export interface AppLoadBalancerProps {
 
 export class ApplicationLoadBalancer extends Construct {
   private alb: elbv2.ApplicationLoadBalancer;
+
   private albSecurityGroup: ec2.SecurityGroup;
 
   constructor(scope: Construct, id: string, props: AppLoadBalancerProps) {

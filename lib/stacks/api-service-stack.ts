@@ -1,96 +1,127 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
 
 import { FargateTaskDefinition } from '../components/ecs-task-definition';
 import { EcsFargateService } from '../components/ecs-fargate-service';
 
-export interface FargateServiceSecret {
-  taskDefSecretName: string;
-  secretsMangerSecretField: string;
-  secretsManagerSecretName: string;
-}
+import { importEcsSecrets, FargateServiceSecret, importVpc, importAlb, importSg, importHostedZone, importAlbCertificate } from '../helpers'
 
 export interface ApiServiceStackProps extends cdk.StackProps {
-  readonly envName: string;
+  /** Name of the application assigned to logical id of CloudFormation components */
   readonly appPrefix: string;
 
-  readonly vpcSsmParam: string;
-  readonly domainCertSsmParam: string;
-  readonly rootDomainName: string;
-  readonly subdomain: string;
-  readonly albArnSsmParam: string;
-  readonly albSecurityGroupSsmParam: string;
-  readonly dbSecurityGroupSsmParam: string;
-  readonly ecsExecRoleSsmParam: string;
-  readonly ecsTaskRoleSsmParam: string;
-  readonly ecsClusterName: string;
-  readonly dockerPort: number;
-  readonly albPort: number;
-  readonly healthCheckPath?: string;
+  /** Name of the deployed environmend */
+  readonly envName: string;
+
+  /** Name used to identify deployed service */
   readonly serviceName: string;
+
+  /** SSM param name storing VPC id */
+  readonly vpcSsmParam: string;
+
+  /** SSM param name storing root domain certificate ARN */
+  readonly domainCertSsmParam: string;
+
+  /** Registered root domain name */
+  readonly rootDomainName: string;
+
+  /** Subdomain of the root domain used to access the app */
+  readonly subdomain: string;
+
+  /** SSM param name storing shared ALB ARN */
+  readonly albArnSsmParam: string;
+
+  /** SSM param name storing shared ALB security group ARN */
+  readonly albSecurityGroupSsmParam: string;
+
+  /** SSM param name storing shared database security group ARN */
+  readonly dbSecurityGroupSsmParam: string;
+
+  /** SSM param name storing default ECS execution role ARN */
+  readonly ecsExecRoleSsmParam: string;
+
+  /** SSM param name storing default ECS task role ARN */
+  readonly ecsTaskRoleSsmParam: string;
+
+  /** Name of the ECS cluster to deploy the service */
+  readonly ecsClusterName: string;
+
+  /** Port exposed by the service Docker container */
+  readonly dockerPort: number;
+
+  /** ALB port used to access the service */
+  readonly albPort: number;
+
+  /** Service healthcheck URL. Defaults to "/" */
+  readonly healthCheckPath?: string;
+
+  /** Docker image used to deploy the service */
   readonly dockerImageUrl: string;
+
+  /** Service CPU setting in MiB */
   readonly cpu: number;
+
+  /** Service memory setting in MiB */
   readonly memory: number;
+
+  /** The desired number of tasks running in the service */
   readonly serviceTasksCount: number;
+
+  /** List of Secrets Manager secrets to supply to the service */
   readonly secrets: FargateServiceSecret[];
+
+  /** List of environment variables to supply to the service */
   readonly environmentVars: Record<string, string>[];
 }
 
+/**
+ * Creates infrastructure for the backend service including:
+ *
+ * 1. ECS task definition and service
+ * 2. ALB target group and listener
+ * 3. Route53 record
+ */
 export class ApiServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ApiServiceStackProps) {
     super(scope, id, props);
 
-    const vpcId = ssm.StringParameter.valueFromLookup(this, props.vpcSsmParam);
+    const vpc = importVpc(this, props.vpcSsmParam)
+    const secrets = importEcsSecrets(this, props.secrets)
+    const alb = importAlb(this, props.albArnSsmParam, `${props.appPrefix}Alb`)
+    const albSg = importSg(this, props.albSecurityGroupSsmParam, `${props.appPrefix}AlbSg`)
+    const dbSg = importSg(this, props.dbSecurityGroupSsmParam, `${props.appPrefix}DbSg`)
+    const rootHostedZone = importHostedZone(this, props.rootDomainName, `${props.appPrefix}RootHz`)
+    const listenerCertificate = importAlbCertificate(this, props.domainCertSsmParam)
 
-    const vpc = ec2.Vpc.fromLookup(this, `${props.appPrefix}Vpc`, {
-      vpcId,
-    });
+    const cluster = ecs.Cluster.fromClusterAttributes(this, `${props.appPrefix}EcsCluster`, { clusterName: props.ecsClusterName, vpc, securityGroups: [] });
 
-    // TODO: move to separate construct
-    const secrets: { [key: string]: ecs.Secret } = {};
-    for (const secret of props.secrets) {
-      const secretsManagerSecret = secretsmanager.Secret.fromSecretPartialArn(this, `${secret.taskDefSecretName}Secret`, `arn:aws:secretsmanager:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:secret:${secret.secretsManagerSecretName}`);
-      secrets[secret.taskDefSecretName] = ecs.Secret.fromSecretsManager(secretsManagerSecret, secret.secretsMangerSecretField);
-    }
-
+    /** Configure service environment variables */
     const environment: Record<string, string> = {
       ENV: props.envName,
       SERVICE: props.serviceName,
     }
 
-    for (const envVar of props.environmentVars) {
-      for (const [key, value] of Object.entries(envVar)) {
+    props.environmentVars.forEach((envVar) => {
+      Object.entries(envVar).forEach(([key, value]) => {
         const varName = key as string;
         environment[varName] = value.toString()
-      }
-    }
+      })
+    });
 
-    const albArn = ssm.StringParameter.valueFromLookup(this, props.albArnSsmParam);
-    const albSgId = ssm.StringParameter.valueFromLookup(this, props.albSecurityGroupSsmParam);
-    const alb = elbv2.ApplicationLoadBalancer.fromLookup(this, 'Alb', { loadBalancerArn: albArn });
-    const albSg = ec2.SecurityGroup.fromLookupById(this, 'AlbSg', albSgId);
-
-
-    const dbSgId = ssm.StringParameter.valueFromLookup(this, props.dbSecurityGroupSsmParam);
-    const dbSg = ec2.SecurityGroup.fromLookupById(this, 'DbSg', dbSgId);
-
-    const cluster = ecs.Cluster.fromClusterAttributes(this, 'EcsCluster', { clusterName: props.ecsClusterName, vpc: vpc, securityGroups: [] });
-
-    const domainCertArn = ssm.StringParameter.valueForStringParameter(this, props.domainCertSsmParam);
-
-    const taskDefinition = new FargateTaskDefinition(this, `FargateTaskDefinition`, {
+    /** Create Fargate task definition */
+    const taskDefinition = new FargateTaskDefinition(this, `${props.serviceName}FargateTaskDef`, {
       serviceName: props.serviceName,
       dockerImageUrl: props.dockerImageUrl,
       envName: props.envName,
       ecsDefExecRoleSsmParam: props.ecsExecRoleSsmParam,
       ecsDefTaskRoleSsmParam: props.ecsTaskRoleSsmParam,
+      cpu: props.cpu,
+      memory: props.memory,
       containerDefinitions: [
         {
           name: props.serviceName,
@@ -102,18 +133,19 @@ export class ApiServiceStack extends cdk.Stack {
               protocol: ecs.Protocol.TCP,
             },
           ],
-          secrets: secrets,
-          environment: environment,
+          secrets,
+          environment,
         },
       ],
     });
 
-    const targetGroup = new elbv2.ApplicationTargetGroup(this, `TargetGroup`, {
+    /** Create ALB target group */
+    const targetGroup = new elbv2.ApplicationTargetGroup(this, `${props.serviceName}AlbTargetGroup`, {
       targetGroupName: `${props.serviceName}-target-group`,
       targetType: elbv2.TargetType.IP,
       protocol: elbv2.ApplicationProtocol.HTTP,
       port: props.albPort,
-      vpc: vpc,
+      vpc,
       deregistrationDelay: cdk.Duration.seconds(30),
       healthCheck: {
         path: props.healthCheckPath || '/',
@@ -121,47 +153,37 @@ export class ApiServiceStack extends cdk.Stack {
       }
     });
 
-    const fargateService = new EcsFargateService(this, `FargateService`, {
+    /** Create load balanced ECS Fargate service */
+    const fargateService = new EcsFargateService(this, `${props.serviceName}FargateService`, {
       serviceName: props.serviceName,
       taskDefinition: taskDefinition.getFargateTaskDefinition(),
-      cluster: cluster,
-      targetGroup: targetGroup,
+      cluster,
+      targetGroup,
       albSecurityGroup: albSg,
       dbSecurityGroup: dbSg,
-      vpc: vpc,
+      vpc,
       taskCount: props.serviceTasksCount,
       hostPort: ec2.Port.tcp(props.albPort),
       dbPort: ec2.Port.tcp(5432)
     })
 
 
-    const listener = alb.addListener(`AlbListener`, {
+    /** Create HTTPS load balancer listener */
+    const albListener = alb.addListener(`${props.serviceName}AlbListener`, {
       protocol: elbv2.ApplicationProtocol.HTTPS,
       port: props.albPort,
       open: true,
-      defaultAction: elbv2.ListenerAction.fixedResponse(200, {
-        contentType: 'text/plain',
-        messageBody: 'ALB is working'
-      }),
-      certificates: [elbv2.ListenerCertificate.fromArn(domainCertArn)],
+      defaultAction: elbv2.ListenerAction.forward([targetGroup]),
+      certificates: [listenerCertificate],
     });
 
-    listener.addAction('ListenerAction', {
-      action: elbv2.ListenerAction.forward([targetGroup]),
-    });
-
-    const rootHostedZone = route53.HostedZone.fromLookup(this, 'RootHostedZone', {
-      domainName: props.rootDomainName
-    });
-
-    new route53.ARecord(this, 'AlbAliasRecord', {
+    /** Create Route53 record for service subdomain */
+    const route53Record = new route53.ARecord(this, `${props.serviceName}ARecord`, {
       zone: rootHostedZone,
       recordName: props.subdomain,
       target: route53.RecordTarget.fromAlias(
         new route53Targets.LoadBalancerTarget(alb)
       )
     });
-
   }
-
 }

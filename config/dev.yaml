@@ -1,6 +1,8 @@
 awsAccountId: '579742570368'
 awsRegion: 'us-east-2'
 
+appPrefix: 'cb'
+
 vpcCidr: '10.0.0.0/16'
 natGatewaysCount: 0
 rootDomainName: 'crowd.bible'

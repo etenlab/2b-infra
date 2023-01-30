@@ -23,8 +23,8 @@ export interface FargateTaskDefinitionProps {
   dockerImageUrl: string;
   family?: string;
   containerDefinitions: FargateContainerDefinition[];
-  cpu?: string;
-  memory?: string;
+  cpu?: number;
+  memory?: number;
   executionRoleArn?: string;
   taskRoleArn?: string;
 }
@@ -47,14 +47,14 @@ export class FargateTaskDefinition extends Construct {
     const execRole = iam.Role.fromRoleArn(this, 'ExecutionRole', executionRoleArn);
     const taskRole = iam.Role.fromRoleArn(this, 'TaskRole', taskRoleArn);
 
-    const cpu = props.cpu ? parseInt(props.cpu) : this.defaultCpu;
-    const memory = props.memory ? parseInt(props.memory) : this.defaultMemory;
+    const cpu = props.cpu || this.defaultCpu;
+    const memory = props.memory || this.defaultMemory;
     const taskFamily = props.family || props.serviceName;
 
     const taskDefinitionProps: ecs.FargateTaskDefinitionProps = {
       executionRole: execRole,
-      taskRole: taskRole,
-      cpu: cpu,
+      taskRole,
+      cpu,
       family: taskFamily,
       memoryLimitMiB: memory,
     };
@@ -74,7 +74,7 @@ export class FargateTaskDefinition extends Construct {
         essential: definition.essential,
         logging: ecs.LogDriver.awsLogs({
           streamPrefix: 'ecs',
-          logGroup: logGroup,
+          logGroup,
         }),
         environment: definition.environment,
         secrets: definition.secrets,

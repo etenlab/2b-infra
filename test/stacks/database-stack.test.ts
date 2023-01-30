@@ -8,6 +8,7 @@ import * as SsmMock from "../mocks/ssm-mock";
 
 const stackParams = {
     envName: 'qa',
+    appPrefix: 'testApp',
     vpcSsmParam: 'test-vpc-ssm',
     isPubliclyAccessible: true,
     dbCredentialSecret: 'db-credential-secret',

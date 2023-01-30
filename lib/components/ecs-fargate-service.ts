@@ -24,7 +24,7 @@ export class EcsFargateService extends Construct {
   constructor(scope: Construct, id: string, props: FargateServiceProps) {
     super(scope, id);
 
-    const serviceSg = new ec2.SecurityGroup(scope, `${props.serviceName}FargateServiceSg`, {
+    const serviceSg = new ec2.SecurityGroup(scope, `${props.serviceName}ServiceSg`, {
       vpc: props.vpc,
       description: `${props.serviceName} fargate service security group`,
       securityGroupName: `${props.serviceName}-service-sg`,
@@ -35,7 +35,7 @@ export class EcsFargateService extends Construct {
     props.dbSecurityGroup.addIngressRule(serviceSg,props.dbPort, `Allows ECS to DB connection on port ${props.dbPort.toString()}`)
 
 
-    const service = new ecs.FargateService(scope, `${props.serviceName}FargateService`, {
+    const service = new ecs.FargateService(scope, `${props.serviceName}Service`, {
       cluster: props.cluster,
       serviceName: `${props.serviceName}Service`,
       assignPublicIp: true,

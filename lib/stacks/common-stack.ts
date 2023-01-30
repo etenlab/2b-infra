@@ -4,26 +4,62 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+
 import { ApplicationLoadBalancer } from '../components/application-load-balancer';
 import { VPC } from '../components/vpc';
 import { EcsExecutionRole } from '../components/ecs-execution-role';
 import { EcsTaskRole } from '../components/ecs-task-role';
 
+/**
+ * Properties required to create shared project infrastructure
+ */
 export interface CommonStackProps extends cdk.StackProps {
-  readonly cidr: string;
-  readonly envName: string;
-  readonly vpcSsmParam: string;
-  readonly ecsExecRoleSsmParam: string;
-  readonly ecsTaskRoleSsmParam: string;
-  readonly domainCertSsmParam: string;
-  readonly ecsClusterName: string;
-  readonly albArnSsmParam: string;
-  readonly albSecurityGroupSsmParam: string;
-  readonly natGatewaysCount: number;
+  /** Name of the application assigned to logical id of CloudFormation components */
   readonly appPrefix: string;
+
+  /** Name of the deployed environmend */
+  readonly envName: string;
+
+  /** VPC CIDR block */
+  readonly cidr: string;
+
+  /** SSM param name to store VPC id */
+  readonly vpcSsmParam: string;
+
+  /** SSM param name to store ECS execution role ARN */
+  readonly ecsExecRoleSsmParam: string;
+
+  /** SSM param name to store ECS task role ARN */
+  readonly ecsTaskRoleSsmParam: string;
+
+  /** SSM param name to store ACM certificate ARN */
+  readonly domainCertSsmParam: string;
+
+  /** Name of the ECS cluster to create */
+  readonly ecsClusterName: string;
+
+  /** SSM param name to store ALB ARN */
+  readonly albArnSsmParam: string;
+
+  /** SSM param name to store ALB security group id */
+  readonly albSecurityGroupSsmParam: string;
+
+  /** Number of nat gateways to create */
+  readonly natGatewaysCount: number;
+
+  /** Registered root domain name */
   readonly rootDomainName: string
 }
 
+/**
+ * Creates shared project infrastructure including:
+ *
+ * 1. Application VPC
+ * 2. Application Load Balancer
+ * 3. ECS cluster and default ECS IAM roles
+ * 4. Route53 public hosted zone for root domain
+ *
+ */
 export class CommonStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: CommonStackProps) {
     super(scope, id, props);

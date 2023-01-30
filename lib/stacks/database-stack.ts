@@ -3,27 +3,42 @@ import { Construct } from 'constructs';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import { importVpc } from '../helpers'
 
+/**
+ * Properties required to create Aurora database
+ */
 export interface DatabaseStackProps extends cdk.StackProps {
+  /** Name of the application assigned to logical id of CloudFormation components */
+  readonly appPrefix: string;
+
+  /** Name of the deployed environmend */
   readonly envName: string;
+
+  /** SSM param name storing VPC id */
   readonly vpcSsmParam: string;
+
+  /** Whether database is accessible outside of VPC */
   readonly isPubliclyAccessible: boolean;
+
+  /** Name of the secret in Secrets Manager to store database credentials */
   readonly dbCredentialSecret: string;
+
+  /** SSM param name to store database security group id */
   readonly dbSecurityGroupSsmParam: string;
 }
 
+/**
+ * Creates PostgreSQL Aurora cluster with a single database
+ */
 export class DatabaseStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: DatabaseStackProps) {
     super(scope, id, props);
 
-    const vpcId = ssm.StringParameter.valueFromLookup(this, props.vpcSsmParam);
+    const vpc = importVpc(this, props.vpcSsmParam)
 
-    const vpc = ec2.Vpc.fromLookup(this, `VPC`, {
-      vpcId,
-    });
-
-    const databaseSg = new ec2.SecurityGroup(this, 'AuroraClusterSG', {
-      vpc: vpc,
+    const databaseSg = new ec2.SecurityGroup(this, `${props.appPrefix}AuroraClusterSG`, {
+      vpc,
       description: 'Aurora cluster security group',
       securityGroupName: `${props.envName}-aurora-cluster-sg`,
       allowAllOutbound: true,
@@ -32,10 +47,10 @@ export class DatabaseStack extends cdk.Stack {
     if (props.isPubliclyAccessible) {
       databaseSg.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(5432), 'Allow database connection from anywhere');
     } else {
-      databaseSg.addIngressRule(ec2.Peer.ipv4(vpc.vpcCidrBlock), ec2.Port.tcp(5432), 'Allow database only from VPC');
+      databaseSg.addIngressRule(ec2.Peer.ipv4(vpc.vpcCidrBlock), ec2.Port.tcp(5432), 'Allow database connection only from VPC');
     }
 
-    const auroraCluster = new rds.DatabaseCluster(this, 'AuroraCluster', {
+    const auroraCluster = new rds.DatabaseCluster(this, `${props.appPrefix}AuroraCluster`, {
       instances: 1,
       clusterIdentifier: `${props.envName}-aurora-cluster`,
       defaultDatabaseName: 'eildb1',
@@ -47,7 +62,7 @@ export class DatabaseStack extends cdk.Stack {
       storageEncrypted: true,
       credentials: rds.Credentials.fromGeneratedSecret('postgres', { secretName: props.dbCredentialSecret }),
       instanceProps: {
-        vpc: vpc,
+        vpc,
         vpcSubnets: {
           subnets: vpc.selectSubnets({
             subnetType: props.isPubliclyAccessible ? ec2.SubnetType.PUBLIC : ec2.SubnetType.PRIVATE_ISOLATED,
@@ -61,7 +76,7 @@ export class DatabaseStack extends cdk.Stack {
 
     /**
      * CDK v2.60 does not support ServerlessV2 Aurora.
-     * Editing the generated cloudformation construct directly allows to set autoscaling options.
+     * Editing the generated cloudformation construct directly is a way to set autoscaling options.
      *
      * @see: https://github.com/aws/aws-cdk/issues/10842
      */
@@ -72,7 +87,7 @@ export class DatabaseStack extends cdk.Stack {
       maxCapacity: 4,
     };
 
-    new ssm.StringParameter(this, 'DbSecurityGroup', {
+    new ssm.StringParameter(this, `${props.appPrefix}DbSecurityGroup`, {
       stringValue: databaseSg.securityGroupId,
       description: 'Database security group',
       parameterName: props.dbSecurityGroupSsmParam,

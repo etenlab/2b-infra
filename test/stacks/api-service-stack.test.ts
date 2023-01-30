@@ -3,8 +3,8 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { Match, Template } from 'aws-cdk-lib/assertions';
-import { ApiServiceStack } from '../../lib/stacks/api-service-stack';
 import * as route53 from 'aws-cdk-lib/aws-route53';
+import { ApiServiceStack } from '../../lib/stacks/api-service-stack';
 
 import * as Route53Mock from "../mocks/route53-mock";
 import * as VpcMock from "../mocks/vpc-mock";

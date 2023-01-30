@@ -7,6 +7,7 @@ export interface EnvConfig {
   awsAccountId: string;
   awsRegion: string;
   environment: string;
+  appPrefix: string,
   [key: string]: unknown;
 }
 
