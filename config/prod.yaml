@@ -6,29 +6,29 @@ awsRegion: 'us-east-2'
 appPrefix: 'cb'
 
 # VPC configuration
-vpcCidr: '10.0.0.0/16'
+vpcCidr: '10.10.0.0/16'
 natGatewaysCount: 0
 
 # App root domain name
 rootDomainName: 'crowd.bible'
 
 # App ECS cluster name
-ecsClusterName: 'dev-cluster'
+ecsClusterName: 'prod-cluster'
 
 # System Manager params to create
-vpcSsmParam: '/dev/app-vpc-id'
-defaultEcsExecRoleSsmParam: '/dev/ecs-default-execution-role'
-defaultEcsTaskRoleSsmParam: '/dev/ecs-default-task-role'
-albArnSsmParam: '/dev/alb-arn'
-albSecurityGroupSsmParam: '/dev/alb-sg-id'
-dbSecurityGroupSsmParam: '/dev/db-sg-id'
-domainCertSsmParam: '/dev/root-domain-certificate'
+vpcSsmParam: '/prod/app-vpc-id'
+defaultEcsExecRoleSsmParam: '/prod/ecs-default-execution-role'
+defaultEcsTaskRoleSsmParam: '/prod/ecs-default-task-role'
+albArnSsmParam: '/prod/alb-arn'
+albSecurityGroupSsmParam: '/prod/alb-sg-id'
+dbSecurityGroupSsmParam: '/prod/db-sg-id'
+domainCertSsmParam: '/prod/root-domain-certificate'
 
 # Secrets Manager params to create
-dbCredentialSecret: 'dev/db/credentials'
+dbCredentialSecret: 'prod/db/credentials'
 
 # Whether database is accessible outside of VPC
-dbPublicAccess: true
+dbPublicAccess: false
 
 # Config for frontend showcase app
 showcaseApp:

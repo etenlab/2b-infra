@@ -3,7 +3,7 @@ import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { CommonStack } from '../lib/stacks/common-stack';
 import { DatabaseStack } from '../lib/stacks/database-stack';
-import { FargateServiceConfig, FrontendAppConfig, getConfig } from './getConfig';
+import { getConfig } from './getConfig';
 import { ApiServiceStack } from '../lib/stacks/api-service-stack';
 import { FrontendStack } from '../lib/stacks/frontend-stack';
 
@@ -17,17 +17,17 @@ const commonStack = new CommonStack(app, 'CommonStack', {
     region: config.awsRegion,
   },
   appPrefix: config.appPrefix,
-  rootDomainName: config.rootDomainName as string,
-  domainCertSsmParam: config.domainCertSsmParam as string,
-  cidr: config.vpcCidr as string,
+  rootDomainName: config.rootDomainName,
+  domainCertSsmParam: config.domainCertSsmParam,
+  cidr: config.vpcCidr,
   envName: config.environment,
-  natGatewaysCount: config.natGatewaysCount as number,
-  vpcSsmParam: config.vpcSsmParam as string,
-  albArnSsmParam: config.albArnSsmParam as string,
-  ecsExecRoleSsmParam: config.defaultEcsExecRoleSsmParam as string,
-  ecsTaskRoleSsmParam: config.defaultEcsTaskRoleSsmParam as string,
-  ecsClusterName: config.ecsClusterName as string,
-  albSecurityGroupSsmParam: config.albSecurityGroupSsmParam as string,
+  natGatewaysCount: config.natGatewaysCount,
+  vpcSsmParam: config.vpcSsmParam,
+  albArnSsmParam: config.albArnSsmParam,
+  ecsExecRoleSsmParam: config.defaultEcsExecRoleSsmParam,
+  ecsTaskRoleSsmParam: config.defaultEcsTaskRoleSsmParam,
+  ecsClusterName: config.ecsClusterName,
+  albSecurityGroupSsmParam: config.albSecurityGroupSsmParam,
 });
 
 const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
@@ -37,8 +37,8 @@ const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
   },
   appPrefix: config.appPrefix,
   envName: config.environment,
-  vpcSsmParam: config.vpcSsmParam as string,
-  isPubliclyAccessible: config.dbPublicAccess as boolean,
+  vpcSsmParam: config.vpcSsmParam,
+  isPubliclyAccessible: config.dbPublicAccess,
   dbCredentialSecret: config.dbCredentialSecret as string,
   dbSecurityGroupSsmParam: config.dbSecurityGroupSsmParam as string,
 });
@@ -50,8 +50,8 @@ const showcaseAppStack = new FrontendStack(app, 'ShowcaseApp', {
   },
   appPrefix: config.appPrefix,
   envName: config.environment,
-  domainName: (config.showcaseApp as FrontendAppConfig).domainName,
-  rootDomainName: config.rootDomainName as string,
+  domainName: config.showcaseApp.domainName,
+  rootDomainName: config.rootDomainName,
 });
 
 const databaseApiStack = new ApiServiceStack(app, 'DatabaseApiStack', {
@@ -70,15 +70,15 @@ const databaseApiStack = new ApiServiceStack(app, 'DatabaseApiStack', {
   ecsClusterName: config.ecsClusterName as string,
   domainCertSsmParam: config.domainCertSsmParam as string,
   rootDomainName: config.rootDomainName as string,
-  subdomain: (config.databaseApi as FargateServiceConfig).subdomain,
-  dockerPort: (config.databaseApi as FargateServiceConfig).dockerPort,
-  albPort: (config.databaseApi as FargateServiceConfig).albPort,
-  serviceName: (config.databaseApi as FargateServiceConfig).serviceName,
-  dockerImageUrl: (config.databaseApi as FargateServiceConfig).dockerImageUrl,
-  cpu: (config.databaseApi as FargateServiceConfig).cpu,
-  memory: (config.databaseApi as FargateServiceConfig).memory,
-  serviceTasksCount: (config.databaseApi as FargateServiceConfig).taskCount,
-  environmentVars: (config.databaseApi as FargateServiceConfig).environment,
+  subdomain: config.databaseApi.subdomain,
+  dockerPort: config.databaseApi.dockerPort,
+  albPort: config.databaseApi.albPort,
+  serviceName: config.databaseApi.serviceName,
+  dockerImageUrl: config.databaseApi.dockerImageUrl,
+  cpu: config.databaseApi.cpu,
+  memory: config.databaseApi.memory,
+  serviceTasksCount: config.databaseApi.taskCount,
+  environmentVars: config.databaseApi.environment,
   secrets: [
     {
       taskDefSecretName: 'DB_PASSWORD',
@@ -124,15 +124,15 @@ const adminApiStack = new ApiServiceStack(app, 'AdminApiStack', {
   ecsClusterName: config.ecsClusterName as string,
   domainCertSsmParam: config.domainCertSsmParam as string,
   rootDomainName: config.rootDomainName as string,
-  subdomain: (config.adminApi as FargateServiceConfig).subdomain,
-  environmentVars: (config.adminApi as FargateServiceConfig).environment,
-  dockerPort: (config.adminApi as FargateServiceConfig).dockerPort,
-  albPort: (config.adminApi as FargateServiceConfig).albPort,
-  serviceName: (config.adminApi as FargateServiceConfig).serviceName,
-  dockerImageUrl: (config.adminApi as FargateServiceConfig).dockerImageUrl,
-  cpu: (config.adminApi as FargateServiceConfig).cpu,
-  memory: (config.adminApi as FargateServiceConfig).memory,
-  serviceTasksCount: (config.databaseApi as FargateServiceConfig).taskCount,
+  subdomain: config.adminApi.subdomain,
+  environmentVars: config.adminApi.environment,
+  dockerPort: config.adminApi.dockerPort,
+  albPort: config.adminApi.albPort,
+  serviceName: config.adminApi.serviceName,
+  dockerImageUrl: config.adminApi.dockerImageUrl,
+  cpu: config.adminApi.cpu,
+  memory: config.adminApi.memory,
+  serviceTasksCount: config.databaseApi.taskCount,
   secrets: [
     {
       taskDefSecretName: 'DB_PASSWORD',

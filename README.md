@@ -8,8 +8,8 @@ The project consists of several CloudFormation stacks:
 
 1. `1 * CommonStack` - deploys resources shared across all applications (VPC, ALB, ECS Cluster, Route53 Hosted Zone)
 2. `1 * DatabaseStack` - deploys Aurora PostgreSQL cluster shared across all applications
-3. `multiple * ApiServiceStack` - deploys project APIs hosted on ECS
-4. `multiple * FrontendStack` - deploys project frontend hosted on S3 + CloudFront
+3. `N * ApiServiceStack` - deploys project APIs hosted on ECS
+4. `N * FrontendStack` - deploys project frontends hosted on S3 + CloudFront
 
 ## How to deploy
 

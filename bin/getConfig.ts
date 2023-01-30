@@ -2,30 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as fs from 'fs';
 import * as path from 'path';
 import { load } from 'js-yaml';
-
-export interface EnvConfig {
-  awsAccountId: string;
-  awsRegion: string;
-  environment: string;
-  appPrefix: string,
-  [key: string]: unknown;
-}
-
-export interface FargateServiceConfig {
-  dockerPort: number;
-  subdomain: string;
-  albPort: number;
-  serviceName: string;
-  dockerImageUrl: string;
-  cpu: number;
-  memory: number;
-  taskCount: number;
-  environment: Record<string, any>[];
-}
-
-export interface FrontendAppConfig {
-  domainName: string;
-}
+import { EnvConfig } from '../config/interface';
 
 /**
  * Gets variable value from CDK context
