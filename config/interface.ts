@@ -4,8 +4,11 @@ export interface EnvConfig {
     environment: string;
     appPrefix: string;
     vpcCidr: string;
+    createEnvHostedZone: boolean;
     natGatewaysCount: number;
     rootDomainName: string;
+    envDomainName?: string;
+    rootDomainCertArn?: string;
     ecsClusterName: string;
     vpcSsmParam: string;
     defaultEcsExecRoleSsmParam: string;

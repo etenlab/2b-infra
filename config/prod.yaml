@@ -9,8 +9,10 @@ appPrefix: 'cb'
 vpcCidr: '10.10.0.0/16'
 natGatewaysCount: 0
 
-# App root domain name
+# Env domain setup
+createEnvHostedZone: false # set to "true" if you want to create envDomainName, i.e."prod.crowd.bible"
 rootDomainName: 'crowd.bible'
+rootDomainCertArn: 'arn:aws:acm:us-east-2:579742570368:certificate/000000000' # required if createEnvHostedZone is "false"
 
 # App ECS cluster name
 ecsClusterName: 'prod-cluster'

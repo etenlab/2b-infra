@@ -11,13 +11,13 @@ const app = new cdk.App();
 
 const config = getConfig(app);
 
-const commonStack = new CommonStack(app, 'CommonStack', {
+const commonStack = new CommonStack(app, `${config.environment}CommonStack`, {
   env: {
     account: config.awsAccountId,
     region: config.awsRegion,
   },
   appPrefix: config.appPrefix,
-  rootDomainName: config.rootDomainName,
+  rootDomainName: config?.rootDomainName,
   domainCertSsmParam: config.domainCertSsmParam,
   cidr: config.vpcCidr,
   envName: config.environment,
@@ -28,9 +28,12 @@ const commonStack = new CommonStack(app, 'CommonStack', {
   ecsTaskRoleSsmParam: config.defaultEcsTaskRoleSsmParam,
   ecsClusterName: config.ecsClusterName,
   albSecurityGroupSsmParam: config.albSecurityGroupSsmParam,
+  createEnvHostedZone: config.createEnvHostedZone,
+  envDomainName: config.envDomainName,
+  rootDomainCertArn: config.rootDomainCertArn,
 });
 
-const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
+const databaseStack = new DatabaseStack(app, `${config.environment}DatabaseStack`, {
   env: {
     account: config.awsAccountId,
     region: config.awsRegion,
@@ -43,7 +46,7 @@ const databaseStack = new DatabaseStack(app, 'DatabaseStack', {
   dbSecurityGroupSsmParam: config.dbSecurityGroupSsmParam as string,
 });
 
-const showcaseAppStack = new FrontendStack(app, 'ShowcaseAppStack', {
+const showcaseAppStack = new FrontendStack(app, `${config.environment}ShowcaseAppStack`, {
   env: {
     account: config.awsAccountId,
     region: config.awsRegion,
@@ -54,7 +57,7 @@ const showcaseAppStack = new FrontendStack(app, 'ShowcaseAppStack', {
   rootDomainName: config.rootDomainName,
 });
 
-const databaseApiStack = new ApiServiceStack(app, 'DatabaseApiStack', {
+const databaseApiStack = new ApiServiceStack(app, `${config.environment}DatabaseApiStack`, {
   env: {
     account: config.awsAccountId,
     region: config.awsRegion,
@@ -108,7 +111,7 @@ const databaseApiStack = new ApiServiceStack(app, 'DatabaseApiStack', {
   ],
 });
 
-const adminApiStack = new ApiServiceStack(app, 'AdminApiStack', {
+const adminApiStack = new ApiServiceStack(app, `${config.environment}AdminApiStack`, {
   env: {
     account: config.awsAccountId,
     region: config.awsRegion,

@@ -17,12 +17,23 @@ The project consists of several CloudFormation stacks:
 2. Bootstrap CDK project in your AWS account if you have not done so already. See [CDK Bootstrapping docs](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) for reference.
 3. Install project dependencies: `npm install`.
 4. Check environment configuration in `./config/dev.yaml` for developnet environment. Use `./config/prod.yaml` for production.
-5. Deploy Common stack: `cdk deploy -c env=dev CommonStack`
-6. Find deployed Route53 hosted zone and add NS records to your DNS provider.
-7. Deploy Database stack `cdk deploy -c env=dev DatabaseStack`
-8. Deploy other stack/s of your choice:
-   - single stack: `cdk deploy -c env=dev CommonStack`.
-   - several stacks: `cdk deploy -c env=dev DatabaseApiStack, AdminApiStack`.
+5. Deploy Common stack: `cdk deploy -c env=dev devCommonStack`
+6. Deploy Database stack `cdk deploy -c env=dev devDatabaseStack`
+7. Deploy other stack/s of your choice:
+   - single stack: `cdk deploy -c env=dev devCommonStack`.
+   - several stacks: `cdk deploy -c env=dev devDatabaseApiStack, devAdminApiStack`.
+
+## Hosted zone configuration
+
+This project assumes that root hosted zone i.e. `crowd.bible` already exists in the AWS account.
+If you also need to create a subdomain for environment, i.e. `dev.crowd.bible`, please make sure `./config/dev.yaml` includes the following:
+
+```yaml
+# Env domain setup
+createEnvHostedZone: true
+rootDomainName: 'crowd.bible'
+envDomainName: 'dev.crowd.bible'
+```
 
 ## Useful commands
 
@@ -32,6 +43,7 @@ The project consists of several CloudFormation stacks:
 - `cdk deploy` deploy this stack to your default AWS account/region
 - `cdk diff` compare deployed stack with current state
 - `cdk synth` emits the synthesized CloudFormation template
+- `cdk context --clear` clear values stored in local `cdk.context.json`. Useful if deployment fails with "resource not found" kind of error.
 
 ## How to add new API stack
 

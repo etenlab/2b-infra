@@ -9,8 +9,10 @@ appPrefix: 'cb'
 vpcCidr: '10.0.0.0/16'
 natGatewaysCount: 0
 
-# App root domain name
+# Env domain setup
 rootDomainName: 'crowd.bible'
+createEnvHostedZone: true # set to "true" if you want to create envDomainName, i.e."dev.crowd.bible"
+envDomainName: 'dev.crowd.bible' # must be present if createEnvHostedZone equals "true"
 
 # App ECS cluster name
 ecsClusterName: 'dev-cluster'
@@ -32,7 +34,7 @@ dbPublicAccess: true
 
 # Config for frontend showcase app
 showcaseApp:
-  domainName: 'showcase.crowd.bible'
+  domainName: 'showcase.dev.crowd.bible'
 
 # Config for database API app
 databaseApi:
