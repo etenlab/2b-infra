@@ -26,6 +26,7 @@ The project consists of several CloudFormation stacks:
 ## Hosted zone configuration
 
 This project assumes that root hosted zone i.e. `crowd.bible` already exists in the AWS account.
+
 If you also need to create a subdomain for environment, i.e. `dev.crowd.bible`, please make sure `./config/dev.yaml` includes the following:
 
 ```yaml
@@ -33,6 +34,15 @@ If you also need to create a subdomain for environment, i.e. `dev.crowd.bible`, 
 createEnvHostedZone: true
 rootDomainName: 'crowd.bible'
 envDomainName: 'dev.crowd.bible'
+```
+
+If you don't plan to use subdomains and want to add records to the root hosted zone directly, i.e. `api.crowd.bible`, please make sure ARR of ACM certificate for the root domain is provided:
+
+```yaml
+# Env domain setup
+createEnvHostedZone: false
+rootDomainName: 'crowd.bible'
+rootDomainCertArn: 'arn:aws:acm:us-east-2:579742570368:certificate/000000000'
 ```
 
 ## Useful commands
