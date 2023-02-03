@@ -45,10 +45,5 @@
     "*.ts": [
       "npm run lint-fix"
     ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   }
 }
