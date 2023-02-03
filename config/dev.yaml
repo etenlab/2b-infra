@@ -1,18 +1,19 @@
 # AWS env settings
-awsAccountId: '579742570368'
+awsAccountId: '808019037620'
 awsRegion: 'us-east-2'
 
 # Prefix used to identify app CloudFormation component
-appPrefix: 'cb'
+appPrefix: 'cb-dev'
 
 # VPC configuration
 vpcCidr: '10.0.0.0/16'
 natGatewaysCount: 0
 
 # Env domain setup
-rootDomainName: 'crowd.bible'
-createEnvHostedZone: true # set to "true" if you want to create envDomainName, i.e."dev.crowd.bible"
-envDomainName: 'dev.crowd.bible' # must be present if createEnvHostedZone equals "true"
+rootDomainName: 'dev.lab.eten.bible'
+createEnvHostedZone: false # set to "true" if you want to create envDomainName, i.e."dev.dev.lab.eten.bible"
+envDomainName: 'dev.lab.eten.bible' # must be present if createEnvHostedZone equals "true"
+rootDomainCertArn: 'arn:aws:acm:us-east-2:808019037620:certificate/ea3ae498-f9e9-42df-a8aa-38541ee5ca44' # required if createEnvHostedZone is "false"
 
 # App ECS cluster name
 ecsClusterName: 'dev-cluster'
@@ -34,34 +35,195 @@ dbPublicAccess: true
 
 # Config for frontend showcase app
 showcaseApp:
-  domainName: 'showcase.dev.crowd.bible'
+  domainName: 'sc.dev.lab.eten.bible'
 
 # Config for database API app
-databaseApi:
-  dockerPort: 8101
-  albPort: 3001
-  subdomain: 'db'
-  serviceName: 'databaseApi'
-  dockerImageUrl: 'etenlab/database-api'
-  cpu: 512
-  memory: 1024
-  taskCount: 1
-  priority: 10
-  environment:
-    - PORT: 8101
-    - RUN_MIGRATIONS: false
+# databaseApi:
+#   dockerPort: 8101
+#   albPort: 3001
+#   subdomain: 'db-api'
+#   serviceName: 'databaseApi'
+#   dockerImageUrl: 'etenlab/database-api'
+#   cpu: 512
+#   memory: 1024
+#   taskCount: 1
+#   priority: 10
+#   environment:
+#     - PORT: 8101
+#     - RUN_MIGRATIONS: false
 
 # Config for admin API app
-adminApi:
-  dockerPort: 8101
-  albPort: 3002
-  subdomain: 'admin'
-  serviceName: 'adminApi'
-  dockerImageUrl: 'etenlab/admin-api'
-  cpu: 512
-  memory: 1024
-  taskCount: 2
-  priority: 20
-  environment:
-    - PORT: 8101
-    - RUN_MIGRATIONS: false
+# adminApi:
+#   dockerPort: 8101
+#   albPort: 3002
+#   subdomain: 'admin-api'
+#   serviceName: 'adminApi'
+#   dockerImageUrl: 'etenlab/admin-api'
+#   cpu: 512
+#   memory: 1024
+#   taskCount: 2
+#   priority: 20
+#   environment:
+#     - PORT: 8101
+#     - RUN_MIGRATIONS: false
+
+fargateApiServices:
+  AdminApiStack:
+    dockerPort: 8101
+    albPort: 3000
+    subdomain: 'admin-api'
+    serviceName: 'adminApi'
+    dockerImageUrl: 'etenlab/admin-api'
+    cpu: 512
+    memory: 1024
+    taskCount: 1
+    priority: 10
+    environment:
+      - PORT: 8101
+      - RUN_MIGRATIONS: false
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+
+  DatabaseApiStack:
+    dockerPort: 8101
+    albPort: 3001
+    subdomain: 'db-api'
+    serviceName: 'databaseApi'
+    dockerImageUrl: 'etenlab/database-api'
+    cpu: 512
+    memory: 1024
+    taskCount: 1
+    priority: 10
+    environment:
+      - PORT: 8101
+      - RUN_MIGRATIONS: false
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+
+  ScriptureApiStack:
+    dockerPort: 80
+    albPort: 3002
+    subdomain: 'scripture-api'
+    serviceName: 'scriptureApi'
+    dockerImageUrl: 'etenlab/scripture-api'
+    cpu: 512
+    memory: 1024
+    taskCount: 1
+    priority: 10
+    environment:
+      - PORT: 80
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+
+  DiscussionApiStack:
+    dockerPort: 80
+    albPort: 3003
+    subdomain: 'discussion-api'
+    serviceName: 'discussionApi'
+    dockerImageUrl: 'etenlab/discussion-api'
+    cpu: 512
+    memory: 1024
+    taskCount: 1
+    priority: 10
+    environment:
+      - PORT: 80
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+
+  SiteTextApiStack:
+    dockerPort: 80
+    albPort: 3004
+    subdomain: 'site-text-api'
+    serviceName: 'siteTextApi'
+    dockerImageUrl: 'etenlab/site-text-api'
+    cpu: 512
+    memory: 1024
+    taskCount: 1
+    priority: 10
+    environment:
+      - PORT: 80
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+
+  VotingApiStack:
+    dockerPort: 80
+    albPort: 3005
+    subdomain: 'voting-api'
+    serviceName: 'votingApi'
+    dockerImageUrl: 'etenlab/voting-api'
+    cpu: 512
+    memory: 1024
+    taskCount: 1
+    priority: 10
+    environment:
+      - PORT: 80
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+
+  AggregationApiStack:
+    dockerPort: 80
+    albPort: 3010
+    subdomain: 'aggregation-api'
+    serviceName: 'aggregationApi'
+    dockerImageUrl: 'etenlab/aggregation-api'
+    cpu: 512
+    memory: 1024
+    taskCount: 1
+    priority: 10
+    environment:
+      - PORT: 80
+      - NOTIFICATIONS_URL: https://notifications-api.dev.lab.eten.bible:80/graphql
+      - DISCUSSIONS_URL: https://discussion-api.dev.lab.eten.bible:80/graphql
+      - SUBGRAPH_DISCUSSION_URL: https://discussion-api.dev.lab.eten.bible:80/graphql
+      - SUBGRAPH_NOTIFICATION_URL: https://notifications-api.dev.lab.eten.bible:80/graphql
+      - SUBGRAPH_SITE_TEXT_URL: https://site-text-api.dev.lab.eten.bible-api:80/graphql
+      - SUBGRAPH_VOTING_URL: https://voting-api.dev.lab.eten.bible:80/graphql
+      - SUBGRAPH_SCRIPTURE_URL: https://scripture-api.dev.lab.eten.bible:80/graphql
+    secrets:
+
+  DataLoadApiStack:
+    dockerPort: 80
+    albPort: 3011
+    subdomain: 'data-load-api'
+    serviceName: 'dataLoadApi'
+    dockerImageUrl: 'etenlab/data-load-api'
+    cpu: 512
+    memory: 1024
+    taskCount: 1
+    priority: 10
+    environment:
+      - PORT: 80
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+
+frontendServices:
+  ShowcaseAppStack:
+    domainName: 'sc.dev.lab.eten.bible'

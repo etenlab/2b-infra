@@ -1,5 +1,5 @@
 # AWS env settings
-awsAccountId: '579742570368'
+awsAccountId: '808019037620'
 awsRegion: 'us-east-2'
 
 # Prefix used to identify app CloudFormation component
@@ -12,7 +12,7 @@ natGatewaysCount: 0
 # Env domain setup
 createEnvHostedZone: false # set to "true" if you want to create envDomainName, i.e."prod.crowd.bible"
 rootDomainName: 'crowd.bible'
-rootDomainCertArn: 'arn:aws:acm:us-east-2:579742570368:certificate/000000000' # required if createEnvHostedZone is "false"
+rootDomainCertArn: 'arn:aws:acm:us-east-1:808019037620:certificate/b21e5321-8f7d-4457-be47-f2a55bb20535' # required if createEnvHostedZone is "false"
 
 # App ECS cluster name
 ecsClusterName: 'prod-cluster'
