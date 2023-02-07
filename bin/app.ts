@@ -69,9 +69,9 @@ Object.entries(config.fargateApiServices).forEach(
       albPort: service.albPort,
       serviceName: service.serviceName,
       dockerImageUrl: service.dockerImageUrl,
-      cpu: service.cpu,
-      memory: service.memory,
-      serviceTasksCount: service.taskCount,
+      cpu: service.cpu || 512,
+      memory: service.memory || 1024,
+      serviceTasksCount: service.taskCount || 1,
       environmentVars: service.environment,
       secrets: Object.entries(service.secrets || {}).map(([key, value]) => {
         return {
