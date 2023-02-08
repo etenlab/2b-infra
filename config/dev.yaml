@@ -231,12 +231,14 @@ fargateApiServices:
     subdomain: 'graphql-engine'
     serviceName: 'graphqlEngine'
     dockerImageUrl: 'hasura/graphql-engine:v2.13.2'
+    secrets:
+      PG_DATABASE_URL: pg-database-url
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: hasura-graphql-metadata-database-url
     environment:
-      - HASURA_GRAPHQL_METADATA_DATABASE_URL: hasura_graphql_metadata_database_url
-      - PG_DATABASE_URL: pg_database_url
-      - HASURA_GRAPHQL_ENABLE_CONSOLE: hasura_graphql_enable_console
-      - HASURA_GRAPHQL_DEV_MODE: hasura_graphql_dev_mode
-      - HASURA_GRAPHQL_ENABLED_LOG_TYPES: hasura_graphql_enabled_log_types
+      # - HASURA_GRAPHQL_CORS_DOMAIN: '*'
+      - HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
+      - HASURA_GRAPHQL_DEV_MODE: 'true'
+      - HASURA_GRAPHQL_ENABLED_LOG_TYPES: 'startup, http-log, webhook-log, websocket-log, query-log'
 
 frontendServices:
   ShowcaseAppStack:
