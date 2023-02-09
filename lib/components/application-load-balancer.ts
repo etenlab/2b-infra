@@ -26,11 +26,15 @@ export class ApplicationLoadBalancer extends Construct {
   constructor(scope: Construct, id: string, props: AppLoadBalancerProps) {
     super(scope, id);
 
-    this.albSecurityGroup = new ec2.SecurityGroup(this, `${props.loadBalancerName}Sg`, {
-      vpc: props.vpc,
-      description: `${props.loadBalancerName} ALB security group`,
-      securityGroupName: `${props.loadBalancerName}-alb-sg`,
-    });
+    this.albSecurityGroup = new ec2.SecurityGroup(
+      this,
+      `${props.loadBalancerName}Sg`,
+      {
+        vpc: props.vpc,
+        description: `${props.loadBalancerName} ALB security group`,
+        securityGroupName: `${props.loadBalancerName}-alb-sg`,
+      },
+    );
 
     this.alb = new elbv2.ApplicationLoadBalancer(this, 'ALB', {
       vpc: props.vpc,
@@ -46,14 +50,14 @@ export class ApplicationLoadBalancer extends Construct {
   }
 
   public getAlb(): elbv2.ApplicationLoadBalancer {
-    return this.alb
+    return this.alb;
   }
 
   public getAlbArn(): string {
-    return this.alb.loadBalancerArn
+    return this.alb.loadBalancerArn;
   }
 
   public getAlbSecurityGroupId(): string {
-    return this.albSecurityGroup.securityGroupId
+    return this.albSecurityGroup.securityGroupId;
   }
 }

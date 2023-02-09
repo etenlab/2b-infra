@@ -20,22 +20,25 @@ export class EcsExecutionRole extends Construct {
       assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
     });
 
-    const defaultEcsExecutionPolicy = new iam.Policy(this, 'EcsExecutionPolicy', {
-      policyName: `${props.envName}-default-ecs-execution-policy`,
-      statements: [
-        new iam.PolicyStatement({
-          effect: iam.Effect.ALLOW,
-          actions: [
-            'secretsmanager:DescribeSecret',
-            'secretsmanager:GetSecretValue',
-            'logs:CreateLogStream',
-            'logs:PutLogEvents'
-          ],
-          resources: ['*']
-        }),
-      ],
-    });
-
+    const defaultEcsExecutionPolicy = new iam.Policy(
+      this,
+      'EcsExecutionPolicy',
+      {
+        policyName: `${props.envName}-default-ecs-execution-policy`,
+        statements: [
+          new iam.PolicyStatement({
+            effect: iam.Effect.ALLOW,
+            actions: [
+              'secretsmanager:DescribeSecret',
+              'secretsmanager:GetSecretValue',
+              'logs:CreateLogStream',
+              'logs:PutLogEvents',
+            ],
+            resources: ['*'],
+          }),
+        ],
+      },
+    );
 
     defaultEcsExecutionPolicy.attachToRole(this.ecsExecRole);
   }

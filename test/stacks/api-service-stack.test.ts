@@ -6,11 +6,11 @@ import { Match, Template } from 'aws-cdk-lib/assertions';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import { ApiServiceStack } from '../../lib/stacks/api-service-stack';
 
-import * as Route53Mock from "../mocks/route53-mock";
-import * as VpcMock from "../mocks/vpc-mock";
-import * as SsmMock from "../mocks/ssm-mock";
-import * as AlbMock from "../mocks/alb-mock";
-import * as SgMock from "../mocks/sg-mock";
+import * as Route53Mock from '../mocks/route53-mock';
+import * as VpcMock from '../mocks/vpc-mock';
+import * as SsmMock from '../mocks/ssm-mock';
+import * as AlbMock from '../mocks/alb-mock';
+import * as SgMock from '../mocks/sg-mock';
 
 route53.HostedZone.fromLookup = Route53Mock.fromLookup;
 ec2.Vpc.fromLookup = VpcMock.fromLookup;
@@ -19,174 +19,190 @@ elbv2.ApplicationLoadBalancer.fromLookup = AlbMock.fromLookup;
 ec2.SecurityGroup.fromLookupById = SgMock.fromLookupById;
 
 const stackParams = {
-    envName: 'qa',
-    appPrefix: 'test',
-    vpcSsmParam: 'test-vpc-ssm',
-    domainCertSsmParam: 'domain-cert-ssm',
-    rootDomainName: 'example.com',
-    subdomain: 'api',
-    albArnSsmParam: 'alb-arn-ssm',
-    albSecurityGroupSsmParam: 'alb-sg-ssm',
-    dbSecurityGroupSsmParam: 'db-sg-ssm',
-    ecsExecRoleSsmParam: 'ecs-exec-role-ssm',
-    ecsTaskRoleSsmParam: 'ecs-task-role-ssm',
-    ecsClusterName: 'qa-cluster',
-    dockerPort: 4002,
-    albPort: 3002,
-    healthCheckPath: '/status',
-    serviceName: 'test-api',
-    dockerImageUrl: 'test-image:1.0',
-    cpu: 256,
-    memory: 512,
-    serviceTasksCount: 3,
-    secrets: [{
-        taskDefSecretName: 'DB_PASSWORD',
-        secretsManagerSecretName: '/qa/db/credentials',
-        secretsMangerSecretField: 'password',
-    }],
-    environmentVars: [{ 'PORT': '3002' }]
-}
+  envName: 'qa',
+  appPrefix: 'test',
+  vpcSsmParam: 'test-vpc-ssm',
+  domainCertSsmParam: 'domain-cert-ssm',
+  rootDomainName: 'example.com',
+  subdomain: 'api',
+  albArnSsmParam: 'alb-arn-ssm',
+  albSecurityGroupSsmParam: 'alb-sg-ssm',
+  dbSecurityGroupSsmParam: 'db-sg-ssm',
+  ecsExecRoleSsmParam: 'ecs-exec-role-ssm',
+  ecsTaskRoleSsmParam: 'ecs-task-role-ssm',
+  ecsClusterName: 'qa-cluster',
+  dockerPort: 4002,
+  albPort: 3002,
+  healthCheckPath: '/status',
+  serviceName: 'test-api',
+  dockerImageUrl: 'test-image:1.0',
+  cpu: 256,
+  memory: 512,
+  serviceTasksCount: 3,
+  secrets: [
+    {
+      taskDefSecretName: 'DB_PASSWORD',
+      secretsManagerSecretName: '/qa/db/credentials',
+      secretsMangerSecretField: 'password',
+    },
+  ],
+  environmentVars: [{ PORT: '3002' }],
+};
 
 describe('ApiServiceStack', () => {
-    const app = new cdk.App();
+  const app = new cdk.App();
 
-    const apiServiceStack = new ApiServiceStack(app, 'ApiServiceStack', stackParams);
-    const template = Template.fromStack(apiServiceStack);
+  const apiServiceStack = new ApiServiceStack(
+    app,
+    'ApiServiceStack',
+    stackParams,
+  );
+  const template = Template.fromStack(apiServiceStack);
 
-    test('Creates correct ECS task definition', () => {
-        template.hasResourceProperties('AWS::ECS::TaskDefinition', Match.objectLike({
-            "ContainerDefinitions": [
-                {
-                    "Environment": [
-                        {
-                            "Name": "ENV",
-                            "Value": "qa"
-                        },
-                        {
-                            "Name": "SERVICE",
-                            "Value": "test-api"
-                        },
-                        {
-                            "Name": "PORT",
-                            "Value": "3002"
-                        }
+  test('Creates correct ECS task definition', () => {
+    template.hasResourceProperties(
+      'AWS::ECS::TaskDefinition',
+      Match.objectLike({
+        ContainerDefinitions: [
+          {
+            Environment: [
+              {
+                Name: 'ENV',
+                Value: 'qa',
+              },
+              {
+                Name: 'SERVICE',
+                Value: 'test-api',
+              },
+              {
+                Name: 'PORT',
+                Value: '3002',
+              },
+            ],
+            Essential: true,
+            Image: 'test-image:1.0',
+            Name: 'test-api',
+            PortMappings: [
+              {
+                ContainerPort: 4002,
+                HostPort: 4002,
+                Protocol: 'tcp',
+              },
+            ],
+            Secrets: [
+              {
+                Name: 'DB_PASSWORD',
+                ValueFrom: {
+                  'Fn::Join': [
+                    '',
+                    [
+                      'arn:aws:secretsmanager:',
+                      {
+                        Ref: 'AWS::Region',
+                      },
+                      ':',
+                      {
+                        Ref: 'AWS::AccountId',
+                      },
+                      ':secret:/qa/db/credentials:password::',
                     ],
-                    "Essential": true,
-                    "Image": "test-image:1.0",
-                    "Name": "test-api",
-                    "PortMappings": [
-                        {
-                            "ContainerPort": 4002,
-                            "HostPort": 4002,
-                            "Protocol": "tcp"
-                        }
-                    ],
-                    "Secrets": [
-                        {
-                            "Name": "DB_PASSWORD",
-                            "ValueFrom": {
-                                "Fn::Join": [
-                                    "",
-                                    [
-                                        "arn:aws:secretsmanager:",
-                                        {
-                                            "Ref": "AWS::Region"
-                                        },
-                                        ":",
-                                        {
-                                            "Ref": "AWS::AccountId"
-                                        },
-                                        ":secret:/qa/db/credentials:password::"
-                                    ]
-                                ]
-                            }
-                        }
-                    ]
-                }
-            ],
-            "Cpu": "256",
-            "Family": "test-api",
-            "Memory": "512",
-            "NetworkMode": "awsvpc",
-            "RequiresCompatibilities": [
-                "FARGATE"
-            ],
-        }))
-    })
-    test('Creates correct ECS service', () => {
-        template.hasResourceProperties('AWS::ECS::Service', Match.objectLike(
-            {
-                "Cluster": "qa-cluster",
-                "DeploymentConfiguration": {
-                    "MaximumPercent": 200,
-                    "MinimumHealthyPercent": 100
+                  ],
                 },
-                "DesiredCount": 3,
-                "EnableECSManagedTags": false,
-                "HealthCheckGracePeriodSeconds": 60,
-                "LaunchType": "FARGATE",
-                "LoadBalancers": [
-                    {
-                        "ContainerName": "test-api",
-                        "ContainerPort": 4002,
-                        "TargetGroupArn": {
-                            "Ref": Match.anyValue()
-                        }
-                    }
-                ],
-                "NetworkConfiguration": {
-                    "AwsvpcConfiguration": {
-                        "AssignPublicIp": "ENABLED",
-                    }
-                },
-                "ServiceName": "test-apiService"
-            }))
-    })
-
-    test('Creates ALB target group and listener', () => {
-        template.hasResourceProperties('AWS::ElasticLoadBalancingV2::TargetGroup', Match.objectLike({
-            "HealthCheckPath": "/status",
-            "HealthCheckPort": "traffic-port",
-            "Name": "test-api-target-group",
-            "Port": 3002,
-            "Protocol": "HTTP",
-            "TargetGroupAttributes": [
-                {
-                    "Key": "deregistration_delay.timeout_seconds",
-                    "Value": "30"
-                },
-                {
-                    "Key": "stickiness.enabled",
-                    "Value": "false"
-                }
+              },
             ],
-            "TargetType": "ip"
-        }))
+          },
+        ],
+        Cpu: '256',
+        Family: 'test-api',
+        Memory: '512',
+        NetworkMode: 'awsvpc',
+        RequiresCompatibilities: ['FARGATE'],
+      }),
+    );
+  });
+  test('Creates correct ECS service', () => {
+    template.hasResourceProperties(
+      'AWS::ECS::Service',
+      Match.objectLike({
+        Cluster: 'qa-cluster',
+        DeploymentConfiguration: {
+          MaximumPercent: 200,
+          MinimumHealthyPercent: 100,
+        },
+        DesiredCount: 3,
+        EnableECSManagedTags: false,
+        HealthCheckGracePeriodSeconds: 60,
+        LaunchType: 'FARGATE',
+        LoadBalancers: [
+          {
+            ContainerName: 'test-api',
+            ContainerPort: 4002,
+            TargetGroupArn: {
+              Ref: Match.anyValue(),
+            },
+          },
+        ],
+        NetworkConfiguration: {
+          AwsvpcConfiguration: {
+            AssignPublicIp: 'ENABLED',
+          },
+        },
+        ServiceName: 'test-apiService',
+      }),
+    );
+  });
 
-        template.hasResourceProperties('AWS::ElasticLoadBalancingV2::Listener', Match.objectLike({
-            "DefaultActions": [
-                {
-                    "TargetGroupArn": {
-                        "Ref": Match.anyValue()
-                    },
-                    "Type": "forward"
-                }
-            ],
-            "Port": 3002,
-            "Protocol": "HTTPS"
-        }))
-    })
+  test('Creates ALB target group and listener', () => {
+    template.hasResourceProperties(
+      'AWS::ElasticLoadBalancingV2::TargetGroup',
+      Match.objectLike({
+        HealthCheckPath: '/status',
+        HealthCheckPort: 'traffic-port',
+        Name: 'test-api-target-group',
+        Port: 3002,
+        Protocol: 'HTTP',
+        TargetGroupAttributes: [
+          {
+            Key: 'deregistration_delay.timeout_seconds',
+            Value: '30',
+          },
+          {
+            Key: 'stickiness.enabled',
+            Value: 'false',
+          },
+        ],
+        TargetType: 'ip',
+      }),
+    );
 
-    test('Creates Route53 record for the service', () => {
-        template.hasResourceProperties('AWS::Route53::RecordSet', Match.objectLike({
-            "Name": "api.example.com.",
-            "Type": "A",
-            "AliasTarget": {
-                "DNSName": Match.anyValue(),
-                "HostedZoneId": Match.anyValue(),
-            }
-        }))
-    })
+    template.hasResourceProperties(
+      'AWS::ElasticLoadBalancingV2::Listener',
+      Match.objectLike({
+        DefaultActions: [
+          {
+            TargetGroupArn: {
+              Ref: Match.anyValue(),
+            },
+            Type: 'forward',
+          },
+        ],
+        Port: 3002,
+        Protocol: 'HTTPS',
+      }),
+    );
+  });
 
-
+  test('Creates Route53 record for the service', () => {
+    template.hasResourceProperties(
+      'AWS::Route53::RecordSet',
+      Match.objectLike({
+        Name: 'api.example.com.',
+        Type: 'A',
+        AliasTarget: {
+          DNSName: Match.anyValue(),
+          HostedZoneId: Match.anyValue(),
+        },
+      }),
+    );
+  });
 });
