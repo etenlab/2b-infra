@@ -20,10 +20,10 @@ export interface FargateContainerDefinition {
   environment: { [key: string]: string };
 
   /** List of task secrets */
-  secrets: { [key: string]: ecs.Secret; };
+  secrets: { [key: string]: ecs.Secret };
 
   /** List of container docker labels */
-  dockerLabels?: { [key: string]: string; };
+  dockerLabels?: { [key: string]: string };
 }
 
 /**
@@ -80,13 +80,21 @@ export class FargateTaskDefinition extends Construct {
       memoryLimitMiB: memory,
     };
 
-    this.taskDefinition = new ecs.FargateTaskDefinition(this, `${props.serviceName}TaskDefinition`, taskDefinitionProps);
+    this.taskDefinition = new ecs.FargateTaskDefinition(
+      this,
+      `${props.serviceName}TaskDefinition`,
+      taskDefinitionProps,
+    );
 
-    const logGroup = new logs.LogGroup(this, `${props.containerDefinition.name}ContainerLogGroup`, {
-      logGroupName: `/ecs/${props.containerDefinition.name}`,
-      retention: logs.RetentionDays.ONE_MONTH,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+    const logGroup = new logs.LogGroup(
+      this,
+      `${props.containerDefinition.name}ContainerLogGroup`,
+      {
+        logGroupName: `/ecs/${props.containerDefinition.name}`,
+        retention: logs.RetentionDays.ONE_MONTH,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+      },
+    );
 
     const containerDefinitionProps: ecs.ContainerDefinitionProps = {
       taskDefinition: this.taskDefinition,
@@ -101,7 +109,10 @@ export class FargateTaskDefinition extends Construct {
       dockerLabels: props.containerDefinition.dockerLabels,
     };
 
-    const taskContainer = this.taskDefinition.addContainer(props.containerDefinition.name, containerDefinitionProps);
+    const taskContainer = this.taskDefinition.addContainer(
+      props.containerDefinition.name,
+      containerDefinitionProps,
+    );
 
     props.containerDefinition.portMappings?.forEach((mapping) => {
       taskContainer.addPortMappings(mapping);

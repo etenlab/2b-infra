@@ -11,7 +11,7 @@
     "lint-fix": "npm run lint -- --fix",
     "test": "jest",
     "cdk": "cdk",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\""
+    "format": "prettier --write \"{src,lib,config,bin}/**/*.{js,ts,json,yml,yaml}\""
   },
   "devDependencies": {
     "@types/jest": "^27.5.2",

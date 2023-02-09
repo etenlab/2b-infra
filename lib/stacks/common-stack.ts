@@ -5,7 +5,12 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 
-import { EcsExecutionRole, EcsTaskRole, ApplicationLoadBalancer, ProjectVpc } from '../components';
+import {
+  EcsExecutionRole,
+  EcsTaskRole,
+  ApplicationLoadBalancer,
+  ProjectVpc,
+} from '../components';
 import { importHostedZone } from '../helpers';
 
 /**
@@ -55,13 +60,13 @@ export interface CommonStackProps extends cdk.StackProps {
    * Domain name for deployed environment.
    * Required if createEnvHostedZone is "true".
    *  */
-  readonly envDomainName?: string
+  readonly envDomainName?: string;
 
   /**
    * ARN of ACM certificate for the root domain.
    * Required if createEnvHostedZone is "false".
    */
-  readonly rootDomainCertArn?: string
+  readonly rootDomainCertArn?: string;
 }
 
 /**
@@ -93,7 +98,7 @@ export class CommonStack extends cdk.Stack {
     /** Load balancer */
     const alb = new ApplicationLoadBalancer(this, `${props.appPrefix}Alb`, {
       loadBalancerName: `${props.envName}-alb`,
-      vpc: vpc.getVpc()
+      vpc: vpc.getVpc(),
     });
 
     new ssm.StringParameter(this, `${props.appPrefix}AlbSsmParam`, {
@@ -116,7 +121,11 @@ export class CommonStack extends cdk.Stack {
     });
 
     /** ECS execution role */
-    const defaultExecutionRole = new EcsExecutionRole(this, `${props.appPrefix}EcsExecutionRole`, { envName: props.envName });
+    const defaultExecutionRole = new EcsExecutionRole(
+      this,
+      `${props.appPrefix}EcsExecutionRole`,
+      { envName: props.envName },
+    );
 
     new ssm.StringParameter(this, `${props.appPrefix}EcsExecRoleSsmParam`, {
       stringValue: defaultExecutionRole.getRoleArn(),
@@ -125,7 +134,11 @@ export class CommonStack extends cdk.Stack {
     });
 
     /** ECS task role */
-    const defaultTaskRole = new EcsTaskRole(this, `${props.appPrefix}EcsTaskRole`, { envName: props.envName });
+    const defaultTaskRole = new EcsTaskRole(
+      this,
+      `${props.appPrefix}EcsTaskRole`,
+      { envName: props.envName },
+    );
 
     new ssm.StringParameter(this, `${props.appPrefix}EcsTaskRoleSsmParam`, {
       stringValue: defaultTaskRole.getRoleArn(),
@@ -139,49 +152,76 @@ export class CommonStack extends cdk.Stack {
      */
     if (props.createEnvHostedZone) {
       if (!props.envDomainName || !props.rootDomainName) {
-        throw new Error('Can not create hosted zone as either envDomainName or rootDomainName is not specified.')
-
+        throw new Error(
+          'Can not create hosted zone as either envDomainName or rootDomainName is not specified.',
+        );
       }
-      const rootHostedZone = importHostedZone(this, props.rootDomainName, `${props.appPrefix}RootHz`)
+      const rootHostedZone = importHostedZone(
+        this,
+        props.rootDomainName,
+        `${props.appPrefix}RootHz`,
+      );
 
-      const envHostedZone = new route53.PublicHostedZone(this, `${props.appPrefix}${props.envName}PublicHz`, {
-        zoneName: props.envDomainName,
-        comment: `Public hosted zone for ${props.envName} environment`,
-      });
+      const envHostedZone = new route53.PublicHostedZone(
+        this,
+        `${props.appPrefix}${props.envName}PublicHz`,
+        {
+          zoneName: props.envDomainName,
+          comment: `Public hosted zone for ${props.envName} environment`,
+        },
+      );
 
       /**
        * Add NS records to the existing root hosted zone
        * to enable DNS validation for env certificate.
-      */
-      const rootZoneNsRecord = new route53.NsRecord(this, `${props.appPrefix}RootNSRecord`, {
-        zone: rootHostedZone,
-        recordName: props.envDomainName,
-        values: envHostedZone.hostedZoneNameServers || [],
-        ttl: cdk.Duration.minutes(30)
-      });
+       */
+      const rootZoneNsRecord = new route53.NsRecord(
+        this,
+        `${props.appPrefix}RootNSRecord`,
+        {
+          zone: rootHostedZone,
+          recordName: props.envDomainName,
+          values: envHostedZone.hostedZoneNameServers || [],
+          ttl: cdk.Duration.minutes(30),
+        },
+      );
 
-      const certificate = new acm.Certificate(this, `${props.appPrefix}${props.envName}Cert`, {
-        domainName: props.envDomainName,
-        subjectAlternativeNames: [`*.${props.envDomainName}`],
-        validation: acm.CertificateValidation.fromDns(envHostedZone),
-      });
+      const certificate = new acm.Certificate(
+        this,
+        `${props.appPrefix}${props.envName}Cert`,
+        {
+          domainName: props.envDomainName,
+          subjectAlternativeNames: [`*.${props.envDomainName}`],
+          validation: acm.CertificateValidation.fromDns(envHostedZone),
+        },
+      );
 
-      new ssm.StringParameter(this, `${props.appPrefix}${props.envName}CertSsmParam`, {
-        stringValue: certificate.certificateArn,
-        description: `Certificate arn for ${props.envDomainName}`,
-        parameterName: props.domainCertSsmParam,
-      });
+      new ssm.StringParameter(
+        this,
+        `${props.appPrefix}${props.envName}CertSsmParam`,
+        {
+          stringValue: certificate.certificateArn,
+          description: `Certificate arn for ${props.envDomainName}`,
+          parameterName: props.domainCertSsmParam,
+        },
+      );
     }
 
     if (!props.createEnvHostedZone) {
       if (!props.rootDomainCertArn) {
-        throw new Error('ACM certificate for root domain is required if subdomain is not created for the deployed environment. ')
+        throw new Error(
+          'ACM certificate for root domain is required if subdomain is not created for the deployed environment. ',
+        );
       }
-      new ssm.StringParameter(this, `${props.appPrefix}${props.envName}CertSsmParam`, {
-        stringValue: props.rootDomainCertArn,
-        description: `Certificate arn for root hosted zone`,
-        parameterName: props.domainCertSsmParam,
-      });
+      new ssm.StringParameter(
+        this,
+        `${props.appPrefix}${props.envName}CertSsmParam`,
+        {
+          stringValue: props.rootDomainCertArn,
+          description: `Certificate arn for root hosted zone`,
+          parameterName: props.domainCertSsmParam,
+        },
+      );
     }
   }
 }

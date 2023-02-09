@@ -14,9 +14,15 @@ import { EnvConfig } from '../config/interface';
  *
  * @returns value of the context variable
  */
-export const getContextVariable = (app: cdk.App, contextKey: string): string => {
+export const getContextVariable = (
+  app: cdk.App,
+  contextKey: string,
+): string => {
   const contextVar = app.node.tryGetContext(contextKey);
-  if (!contextVar) throw new Error(`Context variable ${contextKey} is missing in CDK command. Pass it as -c ${contextKey}=VALUE`);
+  if (!contextVar)
+    throw new Error(
+      `Context variable ${contextKey} is missing in CDK command. Pass it as -c ${contextKey}=VALUE`,
+    );
 
   return contextVar;
 };
@@ -31,7 +37,9 @@ export const getContextVariable = (app: cdk.App, contextKey: string): string => 
 export const getConfig = (app: cdk.App): EnvConfig => {
   const environment = getContextVariable(app, 'env');
   const configFile = `./config/${environment}.yaml`;
-  const envConfig = load(fs.readFileSync(path.resolve(configFile), 'utf8')) as EnvConfig;
+  const envConfig = load(
+    fs.readFileSync(path.resolve(configFile), 'utf8'),
+  ) as EnvConfig;
 
   if (!envConfig.awsAccountId) {
     throw new Error(`"awsAccountId" is missing in ${configFile}`);
