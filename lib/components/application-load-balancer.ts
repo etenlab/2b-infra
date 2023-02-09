@@ -45,7 +45,7 @@ export class ApplicationLoadBalancer extends Construct {
       vpcSubnets: {
         subnetType: ec2.SubnetType.PUBLIC,
       },
-      idleTimeout: cdk.Duration.seconds(10),
+      idleTimeout: cdk.Duration.seconds(300),
     });
   }
 
