@@ -236,10 +236,10 @@ fargateApiServices:
       PG_DATABASE_URL: pg-database-url
       HASURA_GRAPHQL_METADATA_DATABASE_URL: hasura-graphql-metadata-database-url
     environment:
-      # - HASURA_GRAPHQL_CORS_DOMAIN: '*'
       - HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
       - HASURA_GRAPHQL_DEV_MODE: 'false'
       - HASURA_GRAPHQL_ADMIN_SECRET: 'etenlabhasuraadminsecret'
+      - HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
       - HASURA_GRAPHQL_ENABLED_LOG_TYPES: 'startup, http-log, webhook-log, websocket-log, query-log'
 
 frontendServices:
