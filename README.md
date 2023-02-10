@@ -15,7 +15,7 @@ The project consists of several CloudFormation stacks:
 
 1. Configured your AWS CLI with correct credentials. See [AWS CLI Configuration basics](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) for reference.
 2. Bootstrap CDK project in your AWS account if you have not done so already. See [CDK Bootstrapping docs](https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping.html) for reference.
-3. Install project dependencies: `npm install`.
+3. Install project dependencies: `npm ci`.
 4. Check environment configuration in `./config/dev.yaml` for developnet environment. Use `./config/prod.yaml` for production.
 5. Deploy Common stack: `cdk deploy -c env=dev devCommonStack`
 6. Deploy Database stack `cdk deploy -c env=dev devDatabaseStack`
@@ -66,3 +66,17 @@ rootDomainCertArn: 'arn:aws:acm:us-east-2:579742570368:certificate/000000000'
 1. Add frontend configuration into `./config/dev.yaml`. See `showcaseApp` config for example.
 2. Add new `ApiServiceStack` into `./bin/app.ts`. See `showcaseAppStack` for example.
 3. Deploy frontend using `cdk deploy -c env=dev <NEW_FRONTEND_STACK_NAME>`
+
+## Workaround with policy limit from AWS when creating services beyond 10:
+
+List all policies:
+
+`aws logs describe-resource-policies`
+
+Delete some policies:
+
+`aws logs delete-resource-policy --policy-name devNotificationsApiStacknotificationsApiFargateTaskDefnotificationsApiContainerLogGroupPolicyB30998C8`
+
+Put a policy to grant access for all services:
+
+`aws logs put-resource-policy --policy-name devFargateTaskDefContainerLogGroupPolicyAllServices --policy-document '{ "Version": "2012-10-17", "Statement": [ { "Effect": "Allow", "Principal": { "AWS": "808019037620" }, "Action": ["logs:CreateLogStream", "logs:PutLogEvents"], "Resource": "arn:aws:logs:us-east-2:808019037620:log-group:/ecs/*" } ] }'`
