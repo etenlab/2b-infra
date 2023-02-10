@@ -226,6 +226,27 @@ fargateApiServices:
       DB_NAME: dbname
       BASIC_AUTH_CREDENTIALS: basic-auth-creds
 
+  OLDBApiStack:
+    albPort: 3013
+    dockerPort: 80
+    subdomain: 'oldb-api'
+    serviceName: 'oldbApi'
+    dockerImageUrl: 'etenlab/oldb-api'
+    environment:
+      - PORT: 80
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+      KEYCLOAK_URL: keycloak-url
+      KEYCLOAK_CLIENT_ID: keycloak-client-id
+      KEYCLOAK_REALM: keycloak-realm
+      KEYCLOAK_CLIENT_SECRET: keyloak-client-secret
+      KEYCLOAK_ADMIN_CLIENT_ID: keycloak-admin-client-id
+      KEYCLOAK_ADMIN_CLIENT_SECRET: keycloak-admin-client-secret
+
   GraphqlEngineStack:
     albPort: 3012
     dockerPort: 8080
