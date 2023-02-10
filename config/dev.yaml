@@ -224,6 +224,7 @@ fargateApiServices:
       DB_USERNAME: username
       DB_PASSWORD: password
       DB_NAME: dbname
+      BASIC_AUTH_CREDENTIALS: basic-auth-creds
 
   GraphqlEngineStack:
     albPort: 3012
