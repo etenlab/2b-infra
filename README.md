@@ -65,7 +65,8 @@ rootDomainCertArn: 'arn:aws:acm:us-east-2:579742570368:certificate/000000000'
 
 1. Add frontend configuration into `./config/dev.yaml`. See `showcaseApp` config for example.
 2. Add new `ApiServiceStack` into `./bin/app.ts`. See `showcaseAppStack` for example.
-3. Deploy frontend using `cdk deploy -c env=dev <NEW_FRONTEND_STACK_NAME>`
+3. Deploy frontend using `cdk deploy -c env=dev <NEW_FRONTEND_STACK_NAME>`  
+   a. example for dev env: `npx cdk deploy -c env=dev devDocsStack`
 
 ## Workaround with policy limit from AWS when creating services beyond 10:
 

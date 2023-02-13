@@ -287,3 +287,5 @@ frontendServices:
   # Storybook is already configured as storybook.*
   Storybook:
     domainName: sb.dev.lab.eten.bible
+  DocsStack:
+    domainName: docs.dev.lab.eten.bible
