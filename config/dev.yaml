@@ -264,5 +264,26 @@ fargateApiServices:
       - HASURA_GRAPHQL_ENABLED_LOG_TYPES: 'startup, http-log, webhook-log, websocket-log, query-log'
 
 frontendServices:
-  ShowcaseAppStack:
+  # Showcase is already configured as showcase.*
+  ShowcaseAppStack: # configured
     domainName: 'sc.dev.lab.eten.bible'
+  GraphAppStack:
+    domainName: 'graph.dev.lab.eten.bible'
+  TranslationAppStack:
+    domainName: translation.dev.lab.eten.bible
+  LocaliseAppStack:
+    domainName: localise.dev.lab.eten.bible
+  CrowdBibleAppStack:
+    domainName: crowdbible.dev.lab.eten.bible
+  OldbAppStack:
+    domainName: oldb.dev.lab.eten.bible
+  AdminAppStack:
+    domainName: admin.dev.lab.eten.bible
+  EcosystemAppStack:
+    domainName: ecosystem.dev.lab.eten.bible
+  # dev lab eten bible
+  LandingAppStack:
+    domainName: landing.dev.lab.eten.bible
+  # Storybook is already configured as storybook.*
+  Storybook:
+    domainName: sb.dev.lab.eten.bible
