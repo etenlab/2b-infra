@@ -277,6 +277,29 @@ fargateApiServices:
       - HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
       - HASURA_GRAPHQL_ENABLED_LOG_TYPES: 'startup, http-log, webhook-log, websocket-log, query-log'
 
+  # Requires creating a database manually and putting necessary secrets in ASM.
+  # CREATE USER keycloak WITH ENCRYPTED PASSWORD 'KJHU9VrcK38GDGQu3BZHVNYqDqYkt22jP5Vkrd8q';
+  # CREATE DATABASE keycloak_db;
+  # GRANT ALL PRIVILEGES ON DATABASE keycloak_db TO keycloak;
+  KeyCloakStack:
+    albPort: 3014
+    dockerPort: 8080
+    subdomain: 'kc'
+    serviceName: 'keycloak'
+    dockerImageUrl: 'quay.io/keycloak/keycloak:latest'
+    healthCheckPath: '/'
+    # TODO: need to specify run arguments: start-dev --features admin-fine-grained-authz
+    secrets:
+      KC_DB_USERNAME: keycloak-username
+      KC_DB_PASSWORD: keycloak-password
+      KC_DB_URL_DATABASE: keycloak-dbname
+      KC_DB_URL_HOST: keycloak-host
+      KEYCLOAK_ADMIN: keycloak-admin-username
+      KEYCLOAK_ADMIN_PASSWORD: keycloak-admin-password
+    environment:
+      - KC_DB: 'postgres'
+      - KC_DB_SCHEMA: 'public'
+
 frontendServices:
   # Showcase is already configured as showcase.*
   ShowcaseAppStack: # configured
