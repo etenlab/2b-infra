@@ -35,6 +35,7 @@ export interface FargateServiceConfig {
   cpu: number;
   memory: number;
   taskCount: number;
+  healthCheckPath: string;
   environment: Record<string, any>[];
   secrets: Record<string, string>;
 }

@@ -72,6 +72,7 @@ Object.entries(config.fargateApiServices).forEach(
       cpu: service.cpu || 512,
       memory: service.memory || 1024,
       serviceTasksCount: service.taskCount || 1,
+      healthCheckPath: service.healthCheckPath || '/',
       environmentVars: service.environment,
       secrets: Object.entries(service.secrets || {}).map(([key, value]) => {
         return {

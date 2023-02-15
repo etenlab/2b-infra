@@ -40,6 +40,7 @@ fargateApiServices:
     subdomain: 'admin-api'
     serviceName: 'adminApi'
     dockerImageUrl: 'etenlab/admin-api'
+    healthCheckPath: '/'
     environment:
       - PORT: 8101
       - RUN_MIGRATIONS: false
@@ -56,6 +57,7 @@ fargateApiServices:
     subdomain: 'db-api'
     serviceName: 'databaseApi'
     dockerImageUrl: 'etenlab/database-api'
+    healthCheckPath: '/'
     environment:
       - PORT: 8101
       - RUN_MIGRATIONS: false
@@ -75,6 +77,7 @@ fargateApiServices:
     subdomain: 'scripture-api'
     serviceName: 'scriptureApi'
     dockerImageUrl: 'etenlab/scripture-api'
+    healthCheckPath: '/'
     environment:
       - PORT: 80
     secrets:
@@ -90,6 +93,7 @@ fargateApiServices:
     subdomain: 'discussion-api'
     serviceName: 'discussionApi'
     dockerImageUrl: 'etenlab/discussion-api'
+    healthCheckPath: '/graphql'
     environment:
       - PORT: 80
     secrets:
@@ -105,6 +109,7 @@ fargateApiServices:
     subdomain: 'discussion-sub-api'
     serviceName: 'discussionSubApi'
     dockerImageUrl: 'etenlab/discussion-subscriptions-api'
+    healthCheckPath: '/graphql'
     environment:
       - PORT: 80
     secrets:
@@ -120,6 +125,7 @@ fargateApiServices:
     subdomain: 'notifications-api'
     serviceName: 'notificationsApi'
     dockerImageUrl: 'etenlab/notifications-api'
+    healthCheckPath: '/graphql'
     environment:
       - PORT: 80
     secrets:
@@ -135,6 +141,7 @@ fargateApiServices:
     subdomain: 'notifications-sub-api'
     serviceName: 'notificationsSubApi'
     dockerImageUrl: 'etenlab/notifications-subscriptions-api'
+    healthCheckPath: '/graphql'
     environment:
       - PORT: 80
     secrets:
@@ -150,6 +157,7 @@ fargateApiServices:
     subdomain: 'site-text-api'
     serviceName: 'siteTextApi'
     dockerImageUrl: 'etenlab/site-text-api'
+    healthCheckPath: '/'
     environment:
       - PORT: 80
     secrets:
@@ -165,6 +173,7 @@ fargateApiServices:
     subdomain: 'file-api'
     serviceName: 'fileApi'
     dockerImageUrl: 'etenlab/file-api'
+    healthCheckPath: '/graphql'
     environment:
       - PORT: 80
     secrets:
@@ -184,6 +193,7 @@ fargateApiServices:
     subdomain: 'voting-api'
     serviceName: 'votingApi'
     dockerImageUrl: 'etenlab/voting-api'
+    healthCheckPath: '/graphql'
     environment:
       - PORT: 80
     secrets:
@@ -199,6 +209,7 @@ fargateApiServices:
     subdomain: 'aggregation-api'
     serviceName: 'aggregationApi'
     dockerImageUrl: 'etenlab/aggregation-api'
+    healthCheckPath: '/graphql'
     environment:
       - PORT: 80
       - NOTIFICATIONS_URL: https://notifications-api.dev.lab.eten.bible:3005/graphql
@@ -216,6 +227,7 @@ fargateApiServices:
     subdomain: 'data-load-api'
     serviceName: 'dataLoadApi'
     dockerImageUrl: 'etenlab/data-load-api'
+    healthCheckPath: '/'
     environment:
       - PORT: 80
     secrets:
@@ -232,6 +244,7 @@ fargateApiServices:
     subdomain: 'oldb-api'
     serviceName: 'oldbApi'
     dockerImageUrl: 'etenlab/oldb-api'
+    healthCheckPath: '/'
     environment:
       - PORT: 80
     secrets:
@@ -253,6 +266,7 @@ fargateApiServices:
     subdomain: 'graphql-engine'
     serviceName: 'graphqlEngine'
     dockerImageUrl: 'hasura/graphql-engine:v2.13.2'
+    healthCheckPath: '/console'
     secrets:
       PG_DATABASE_URL: pg-database-url
       HASURA_GRAPHQL_METADATA_DATABASE_URL: hasura-graphql-metadata-database-url
