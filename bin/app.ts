@@ -73,7 +73,7 @@ Object.entries(config.fargateApiServices).forEach(
       memory: service.memory || 1024,
       serviceTasksCount: service.taskCount || 1,
       healthCheckPath: service.healthCheckPath || '/',
-      environmentVars: service.environment,
+      environmentVars: [...service.environment, { NO_COLOR: '1' }],
       secrets: Object.entries(service.secrets || {}).map(([key, value]) => {
         return {
           taskDefSecretName: key,
