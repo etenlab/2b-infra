@@ -336,8 +336,7 @@ frontendServices:
   # dev lab eten bible
   LandingAppStack:
     domainName: landing.dev.lab.eten.bible
-  # Storybook is already configured as storybook.*
   Storybook:
-    domainName: sb.dev.lab.eten.bible
+    domainName: storybook.dev.lab.eten.bible
   DocsStack:
     domainName: docs.dev.lab.eten.bible
