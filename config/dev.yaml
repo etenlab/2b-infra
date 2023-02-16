@@ -298,6 +298,23 @@ fargateApiServices:
       - KC_DB: 'postgres'
       - KC_DB_SCHEMA: 'public'
 
+  GraphApiStack:
+    albPort: 3015
+    dockerPort: 80
+    subdomain: 'graph-api'
+    serviceName: 'graphApi'
+    dockerImageUrl: 'etenlab/graph-api'
+    healthCheckPath: '/'
+    environment:
+      - DB_SYNCHRONIZE: 'false'
+      - PORT: 80
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+
 frontendServices:
   # Showcase is already configured as showcase.*
   ShowcaseAppStack: # configured
