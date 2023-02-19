@@ -25,15 +25,22 @@ export class EcsTaskRole extends Construct {
         }),
         new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
-          actions: ['secretsmanager:GetSecretValue', 'secretsmanager:DescribeSecret', 'secretsmanager:ListSecretVersionIds'],
-          resources: [`arn:aws:secretsmanager:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:*`],
+          actions: [
+            'secretsmanager:GetSecretValue',
+            'secretsmanager:DescribeSecret',
+            'secretsmanager:ListSecretVersionIds',
+          ],
+          resources: [
+            `arn:aws:secretsmanager:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:*`,
+          ],
         }),
       ],
     });
 
     this.ecsTaskRole = new iam.Role(this, 'EcsTaskRole', {
       roleName: `${props.envName}-default-ecs-task-role`,
-      description: 'Role application running on ECS use to access AWS resources.',
+      description:
+        'Role application running on ECS use to access AWS resources.',
       assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
     });
 

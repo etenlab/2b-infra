@@ -10,7 +10,8 @@
     "lint": "./node_modules/.bin/eslint . --ext .ts",
     "lint-fix": "npm run lint -- --fix",
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "format": "prettier --write \"{src,lib,config,bin}/**/*.{js,ts,json,yml,yaml}\""
   },
   "devDependencies": {
     "@types/jest": "^27.5.2",
@@ -45,10 +46,5 @@
     "*.ts": [
       "npm run lint-fix"
     ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   }
 }

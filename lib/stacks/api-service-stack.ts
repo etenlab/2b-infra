@@ -7,7 +7,16 @@ import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
 
 import { EcsFargateService, FargateTaskDefinition } from '../components';
-import { importEcsSecrets, FargateServiceSecret, importVpc, importAlb, importSg, importHostedZone, importAlbCertificate, importIamRole } from '../helpers'
+import {
+  importEcsSecrets,
+  FargateServiceSecret,
+  importVpc,
+  importAlb,
+  importSg,
+  importHostedZone,
+  importIamRole,
+  importAlbListener,
+} from '../helpers';
 
 export interface ApiServiceStackProps extends cdk.StackProps {
   /** Name of the application assigned to logical id of CloudFormation components */
@@ -36,6 +45,9 @@ export interface ApiServiceStackProps extends cdk.StackProps {
 
   /** SSM param name storing shared ALB security group ARN */
   readonly albSecurityGroupSsmParam: string;
+
+  /** SSM param name storing HTTPS ALB listener ARN */
+  readonly albListenerSsmParam: string;
 
   /** SSM param name storing shared database security group ARN */
   readonly dbSecurityGroupSsmParam: string;
@@ -75,6 +87,15 @@ export interface ApiServiceStackProps extends cdk.StackProps {
 
   /** List of environment variables to supply to the service */
   readonly environmentVars: Record<string, string>[];
+
+  /** Priority of this ALB target group */
+  readonly routingPriority: number;
+
+  /** Optional list of container docker labels */
+  readonly dockerLabels?: { [key: string]: string };
+
+  /** Optional command that is passed to the container. */
+  readonly command?: string[];
 }
 
 /**
@@ -88,100 +109,138 @@ export class ApiServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ApiServiceStackProps) {
     super(scope, id, props);
 
-    const vpc = importVpc(this, props.vpcSsmParam)
-    const secrets = importEcsSecrets(this, props.secrets)
-    const alb = importAlb(this, props.albArnSsmParam, `${props.appPrefix}Alb`)
-    const albSg = importSg(this, props.albSecurityGroupSsmParam, `${props.appPrefix}AlbSg`)
-    const dbSg = importSg(this, props.dbSecurityGroupSsmParam, `${props.appPrefix}DbSg`)
-    const rootHostedZone = importHostedZone(this, props.rootDomainName, `${props.appPrefix}RootHz`)
-    const listenerCertificate = importAlbCertificate(this, props.domainCertSsmParam)
-    const execRole = importIamRole(this, props.ecsExecRoleSsmParam, `${props.appPrefix}ExecRole`);
-    const taskRole = importIamRole(this, props.ecsTaskRoleSsmParam, `${props.appPrefix}TaskRole`);
+    const vpc = importVpc(this, props.vpcSsmParam);
+    const secrets = importEcsSecrets(this, props.secrets);
+    const alb = importAlb(this, props.albArnSsmParam, `${props.appPrefix}Alb`);
+    const albSg = importSg(
+      this,
+      props.albSecurityGroupSsmParam,
+      `${props.appPrefix}AlbSg`,
+    );
+    const albListener = importAlbListener(this, props.albListenerSsmParam)
 
-    const cluster = ecs.Cluster.fromClusterAttributes(this, `${props.appPrefix}EcsCluster`, { clusterName: props.ecsClusterName, vpc, securityGroups: [] });
+    const dbSg = importSg(
+      this,
+      props.dbSecurityGroupSsmParam,
+      `${props.appPrefix}DbSg`,
+    );
+    const rootHostedZone = importHostedZone(
+      this,
+      props.rootDomainName,
+      `${props.appPrefix}RootHz`,
+    );
+    const execRole = importIamRole(
+      this,
+      props.ecsExecRoleSsmParam,
+      `${props.appPrefix}ExecRole`,
+    );
+    const taskRole = importIamRole(
+      this,
+      props.ecsTaskRoleSsmParam,
+      `${props.appPrefix}TaskRole`,
+    );
+
+    const cluster = ecs.Cluster.fromClusterAttributes(
+      this,
+      `${props.appPrefix}EcsCluster`,
+      { clusterName: props.ecsClusterName, vpc, securityGroups: [] },
+    );
 
     /** Configure service environment variables */
     const environment: Record<string, string> = {
       ENV: props.envName,
       SERVICE: props.serviceName,
-    }
+    };
 
     props.environmentVars.forEach((envVar) => {
       Object.entries(envVar).forEach(([key, value]) => {
         const varName = key as string;
-        environment[varName] = value.toString()
-      })
+        environment[varName] = value.toString();
+      });
     });
 
     /** Create Fargate task definition */
-    const taskDefinition = new FargateTaskDefinition(this, `${props.serviceName}FargateTaskDef`, {
-      serviceName: props.serviceName,
-      dockerImageUrl: props.dockerImageUrl,
-      ecsDefExecRole: execRole,
-      ecsDefTaskRole: taskRole,
-      cpu: props.cpu,
-      memory: props.memory,
-      containerDefinition:
+    const taskDefinition = new FargateTaskDefinition(
+      this,
+      `${props.serviceName}FargateTaskDef`,
       {
-        name: props.serviceName,
-        essential: true,
-        portMappings: [
-          {
-            hostPort: props.dockerPort,
-            containerPort: props.dockerPort,
-            protocol: ecs.Protocol.TCP,
-          },
-        ],
-        secrets,
-        environment,
+        serviceName: props.serviceName,
+        dockerImageUrl: props.dockerImageUrl,
+        ecsDefExecRole: execRole,
+        ecsDefTaskRole: taskRole,
+        cpu: props.cpu,
+        memory: props.memory,
+        containerDefinition: {
+          name: props.serviceName,
+          essential: true,
+          dockerLabels: props.dockerLabels,
+          command: props.command,
+          portMappings: [
+            {
+              hostPort: props.dockerPort,
+              containerPort: props.dockerPort,
+              protocol: ecs.Protocol.TCP,
+            },
+          ],
+          secrets,
+          environment,
+        },
       },
-    });
+    );
 
     /** Create ALB target group */
-    const targetGroup = new elbv2.ApplicationTargetGroup(this, `${props.serviceName}AlbTargetGroup`, {
-      targetGroupName: `${props.serviceName}-target-group`,
-      targetType: elbv2.TargetType.IP,
-      protocol: elbv2.ApplicationProtocol.HTTP,
-      port: props.albPort,
-      vpc,
-      deregistrationDelay: cdk.Duration.seconds(30),
-      healthCheck: {
-        path: props.healthCheckPath || '/',
-        port: 'traffic-port'
-      }
-    });
+    const targetGroup = new elbv2.ApplicationTargetGroup(
+      this,
+      `${props.serviceName}AlbTargetGroup`,
+      {
+        targetGroupName: `${props.serviceName}-target-group`,
+        targetType: elbv2.TargetType.IP,
+        protocol: elbv2.ApplicationProtocol.HTTP,
+        port: props.albPort,
+        vpc,
+        deregistrationDelay: cdk.Duration.seconds(30),
+        healthCheck: {
+          path: props.healthCheckPath || '/',
+          port: 'traffic-port',
+        },
+      },
+    );
 
     /** Create load balanced ECS Fargate service */
-    const fargateService = new EcsFargateService(this, `${props.serviceName}FargateService`, {
-      serviceName: props.serviceName,
-      taskDefinition: taskDefinition.getFargateTaskDefinition(),
-      cluster,
-      targetGroup,
-      albSecurityGroup: albSg,
-      dbSecurityGroup: dbSg,
-      vpc,
-      taskCount: props.serviceTasksCount,
-      hostPort: ec2.Port.tcp(props.albPort),
-      dbPort: ec2.Port.tcp(5432)
+    const fargateService = new EcsFargateService(
+      this,
+      `${props.serviceName}FargateService`,
+      {
+        serviceName: props.serviceName,
+        taskDefinition: taskDefinition.getFargateTaskDefinition(),
+        cluster,
+        targetGroup,
+        albSecurityGroup: albSg,
+        dbSecurityGroup: dbSg,
+        vpc,
+        taskCount: props.serviceTasksCount,
+        hostPort: ec2.Port.tcp(props.albPort),
+        dbPort: ec2.Port.tcp(5432),
+      },
+    );
+
+    albListener.addAction(`${props.serviceName}AlbAction`, {
+      priority: props.routingPriority,
+      conditions: [elbv2.ListenerCondition.hostHeaders([`${props.subdomain}.${props.rootDomainName}`])],
+      action: elbv2.ListenerAction.forward([targetGroup]),
     })
 
-
-    /** Create HTTPS load balancer listener */
-    const albListener = alb.addListener(`${props.serviceName}AlbListener`, {
-      protocol: elbv2.ApplicationProtocol.HTTPS,
-      port: props.albPort,
-      open: true,
-      defaultAction: elbv2.ListenerAction.forward([targetGroup]),
-      certificates: [listenerCertificate],
-    });
-
     /** Create Route53 record for service subdomain */
-    const route53Record = new route53.ARecord(this, `${props.serviceName}ARecord`, {
-      zone: rootHostedZone,
-      recordName: props.subdomain,
-      target: route53.RecordTarget.fromAlias(
-        new route53Targets.LoadBalancerTarget(alb)
-      )
-    });
+    const route53Record = new route53.ARecord(
+      this,
+      `${props.serviceName}ARecord`,
+      {
+        zone: rootHostedZone,
+        recordName: props.subdomain,
+        target: route53.RecordTarget.fromAlias(
+          new route53Targets.LoadBalancerTarget(alb),
+        ),
+      },
+    );
   }
 }

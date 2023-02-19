@@ -50,31 +50,46 @@ export class EcsFargateService extends Construct {
   constructor(scope: Construct, id: string, props: FargateServiceProps) {
     super(scope, id);
 
-    const serviceSg = new ec2.SecurityGroup(scope, `${props.serviceName}ServiceSg`, {
-      vpc: props.vpc,
-      description: `${props.serviceName} fargate service security group`,
-      securityGroupName: `${props.serviceName}-service-sg`,
-    });
+    const serviceSg = new ec2.SecurityGroup(
+      scope,
+      `${props.serviceName}ServiceSg`,
+      {
+        vpc: props.vpc,
+        description: `${props.serviceName} fargate service security group`,
+        securityGroupName: `${props.serviceName}-service-sg`,
+      },
+    );
 
-    serviceSg.addIngressRule(props.albSecurityGroup, props.hostPort, `Allows ALB to ECS connection on port ${props.hostPort.toString()}`)
+    serviceSg.addIngressRule(
+      props.albSecurityGroup,
+      props.hostPort,
+      `Allows ALB to ECS connection on port ${props.hostPort.toString()}`,
+    );
 
-    props.dbSecurityGroup.addIngressRule(serviceSg, props.dbPort, `Allows ECS to DB connection on port ${props.dbPort.toString()}`)
+    props.dbSecurityGroup.addIngressRule(
+      serviceSg,
+      props.dbPort,
+      `Allows ECS to DB connection on port ${props.dbPort.toString()}`,
+    );
 
-
-    const service = new ecs.FargateService(scope, `${props.serviceName}Service`, {
-      cluster: props.cluster,
-      serviceName: `${props.serviceName}Service`,
-      assignPublicIp: true,
-      taskDefinition: props.taskDefinition,
-      desiredCount: props.taskCount,
-      minHealthyPercent: 100,
-      maxHealthyPercent: 200,
-      securityGroups: [serviceSg],
-      vpcSubnets: props.vpc.selectSubnets({
-        subnetType: ec2.SubnetType.PUBLIC,
-      }),
-      healthCheckGracePeriod: cdk.Duration.seconds(60),
-    });
+    const service = new ecs.FargateService(
+      scope,
+      `${props.serviceName}Service`,
+      {
+        cluster: props.cluster,
+        serviceName: `${props.serviceName}Service`,
+        assignPublicIp: true,
+        taskDefinition: props.taskDefinition,
+        desiredCount: props.taskCount,
+        minHealthyPercent: 100,
+        maxHealthyPercent: 200,
+        securityGroups: [serviceSg],
+        vpcSubnets: props.vpc.selectSubnets({
+          subnetType: ec2.SubnetType.PUBLIC,
+        }),
+        healthCheckGracePeriod: cdk.Duration.seconds(60),
+      },
+    );
 
     service.attachToApplicationTargetGroup(props.targetGroup);
   }

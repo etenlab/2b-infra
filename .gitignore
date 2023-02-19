@@ -10,3 +10,5 @@ cdk.context.json
 
 # temp notes
 dev-notes.md
+
+.devcontainer

@@ -3,6 +3,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as cdk from 'aws-cdk-lib';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { Construct } from 'constructs';
+import { importAlbCertificate } from '../helpers';
 
 /**
  * Properties required to create an Application Load Balancer
@@ -13,6 +14,9 @@ export interface AppLoadBalancerProps {
 
   /** VPC to create ALB into */
   vpc: ec2.IVpc;
+
+  /** ACM certificate to associate with this ALB */
+  albCertSsmParam: string;
 }
 
 /**
@@ -23,14 +27,25 @@ export class ApplicationLoadBalancer extends Construct {
 
   private albSecurityGroup: ec2.SecurityGroup;
 
+  private albListener: elbv2.IListener;
+
   constructor(scope: Construct, id: string, props: AppLoadBalancerProps) {
     super(scope, id);
 
-    this.albSecurityGroup = new ec2.SecurityGroup(this, `${props.loadBalancerName}Sg`, {
-      vpc: props.vpc,
-      description: `${props.loadBalancerName} ALB security group`,
-      securityGroupName: `${props.loadBalancerName}-alb-sg`,
-    });
+    const listenerCertificate = importAlbCertificate(
+      this,
+      props.albCertSsmParam,
+    );
+
+    this.albSecurityGroup = new ec2.SecurityGroup(
+      this,
+      `${props.loadBalancerName}Sg`,
+      {
+        vpc: props.vpc,
+        description: `${props.loadBalancerName} ALB security group`,
+        securityGroupName: `${props.loadBalancerName}-alb-sg`,
+      },
+    );
 
     this.alb = new elbv2.ApplicationLoadBalancer(this, 'ALB', {
       vpc: props.vpc,
@@ -41,19 +56,31 @@ export class ApplicationLoadBalancer extends Construct {
       vpcSubnets: {
         subnetType: ec2.SubnetType.PUBLIC,
       },
-      idleTimeout: cdk.Duration.seconds(10),
+      idleTimeout: cdk.Duration.seconds(300),
+    });
+
+    this.albListener = this.alb.addListener('HTTPSAlbListener', {
+      protocol: elbv2.ApplicationProtocol.HTTPS,
+      port: 443,
+      open: true,
+      defaultAction: elbv2.ListenerAction.fixedResponse(404),
+      certificates: [listenerCertificate],
     });
   }
 
   public getAlb(): elbv2.ApplicationLoadBalancer {
-    return this.alb
+    return this.alb;
+  }
+
+  public getAlbListenerArn(): string {
+    return this.albListener.listenerArn;
   }
 
   public getAlbArn(): string {
-    return this.alb.loadBalancerArn
+    return this.alb.loadBalancerArn;
   }
 
   public getAlbSecurityGroupId(): string {
-    return this.albSecurityGroup.securityGroupId
+    return this.albSecurityGroup.securityGroupId;
   }
 }
