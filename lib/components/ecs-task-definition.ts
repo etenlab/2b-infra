@@ -24,6 +24,9 @@ export interface FargateContainerDefinition {
 
   /** List of container docker labels */
   dockerLabels?: { [key: string]: string };
+
+  /** The command that is passed to the container. */
+  command?: string[]
 }
 
 /**
@@ -107,6 +110,7 @@ export class FargateTaskDefinition extends Construct {
       environment: props.containerDefinition.environment,
       secrets: props.containerDefinition.secrets,
       dockerLabels: props.containerDefinition.dockerLabels,
+      command: props.containerDefinition.command
     };
 
     const taskContainer = this.taskDefinition.addContainer(

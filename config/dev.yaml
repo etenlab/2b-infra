@@ -24,6 +24,7 @@ defaultEcsExecRoleSsmParam: '/dev/ecs-default-execution-role'
 defaultEcsTaskRoleSsmParam: '/dev/ecs-default-task-role'
 albArnSsmParam: '/dev/alb-arn'
 albSecurityGroupSsmParam: '/dev/alb-sg-id'
+albListenerSsmParam: '/dev/alb-listener-arn'
 dbSecurityGroupSsmParam: '/dev/db-sg-id'
 domainCertSsmParam: '/dev/root-domain-certificate'
 
@@ -37,6 +38,7 @@ fargateApiServices:
   AdminApiStack:
     albPort: 3000
     dockerPort: 8101
+    priority: 10
     subdomain: 'admin-api'
     serviceName: 'adminApi'
     dockerImageUrl: 'etenlab/admin-api'
@@ -54,6 +56,7 @@ fargateApiServices:
   DatabaseApiStack:
     albPort: 3001
     dockerPort: 8101
+    priority: 20
     subdomain: 'db-api'
     serviceName: 'databaseApi'
     dockerImageUrl: 'etenlab/database-api'
@@ -74,6 +77,7 @@ fargateApiServices:
   ScriptureApiStack:
     albPort: 3002
     dockerPort: 80
+    priority: 30
     subdomain: 'scripture-api'
     serviceName: 'scriptureApi'
     dockerImageUrl: 'etenlab/scripture-api'
@@ -90,6 +94,7 @@ fargateApiServices:
   DiscussionApiStack:
     albPort: 3003
     dockerPort: 80
+    priority: 40
     subdomain: 'discussion-api'
     serviceName: 'discussionApi'
     dockerImageUrl: 'etenlab/discussion-api'
@@ -106,6 +111,7 @@ fargateApiServices:
   DiscussionSubscriptionApiStack:
     albPort: 3004
     dockerPort: 80
+    priority: 50
     subdomain: 'discussion-sub-api'
     serviceName: 'discussionSubApi'
     dockerImageUrl: 'etenlab/discussion-subscriptions-api'
@@ -122,6 +128,7 @@ fargateApiServices:
   NotificationsApiStack:
     albPort: 3005
     dockerPort: 80
+    priority: 60
     subdomain: 'notifications-api'
     serviceName: 'notificationsApi'
     dockerImageUrl: 'etenlab/notifications-api'
@@ -138,6 +145,7 @@ fargateApiServices:
   NotificationsSubscriptionApiStack:
     albPort: 3006
     dockerPort: 80
+    priority: 70
     subdomain: 'notifications-sub-api'
     serviceName: 'notificationsSubApi'
     dockerImageUrl: 'etenlab/notifications-subscriptions-api'
@@ -154,6 +162,7 @@ fargateApiServices:
   SiteTextApiStack:
     albPort: 3007
     dockerPort: 80
+    priority: 80
     subdomain: 'site-text-api'
     serviceName: 'siteTextApi'
     dockerImageUrl: 'etenlab/site-text-api'
@@ -170,6 +179,7 @@ fargateApiServices:
   FileApiStack:
     albPort: 3008
     dockerPort: 80
+    priority: 90
     subdomain: 'file-api'
     serviceName: 'fileApi'
     dockerImageUrl: 'etenlab/file-api'
@@ -190,6 +200,7 @@ fargateApiServices:
   VotingApiStack:
     albPort: 3009
     dockerPort: 80
+    priority: 100
     subdomain: 'voting-api'
     serviceName: 'votingApi'
     dockerImageUrl: 'etenlab/voting-api'
@@ -206,6 +217,7 @@ fargateApiServices:
   AggregationApiStack:
     albPort: 3010
     dockerPort: 80
+    priority: 110
     subdomain: 'aggregation-api'
     serviceName: 'aggregationApi'
     dockerImageUrl: 'etenlab/aggregation-api'
@@ -224,6 +236,7 @@ fargateApiServices:
   DataLoadApiStack:
     albPort: 3011
     dockerPort: 80
+    priority: 120
     subdomain: 'data-load-api'
     serviceName: 'dataLoadApi'
     dockerImageUrl: 'etenlab/data-load-api'
@@ -241,6 +254,7 @@ fargateApiServices:
   OLDBApiStack:
     albPort: 3013
     dockerPort: 80
+    priority: 130
     subdomain: 'oldb-api'
     serviceName: 'oldbApi'
     dockerImageUrl: 'etenlab/oldb-api'
@@ -263,6 +277,7 @@ fargateApiServices:
   GraphqlEngineStack:
     albPort: 3012
     dockerPort: 8080
+    priority: 140
     subdomain: 'graphql-engine'
     serviceName: 'graphqlEngine'
     dockerImageUrl: 'hasura/graphql-engine:v2.13.2'
@@ -284,6 +299,7 @@ fargateApiServices:
   KeyCloakStack:
     albPort: 3014
     dockerPort: 8080
+    priority: 150
     subdomain: 'kc'
     serviceName: 'keycloak'
     dockerImageUrl: 'quay.io/keycloak/keycloak:latest'

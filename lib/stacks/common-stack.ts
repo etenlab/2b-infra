@@ -44,6 +44,9 @@ export interface CommonStackProps extends cdk.StackProps {
   /** SSM param name to store ALB ARN */
   readonly albArnSsmParam: string;
 
+  /** SSM param name to store ALB Listener */
+  readonly albListenerSsmParam: string;
+
   /** SSM param name to store ALB security group id */
   readonly albSecurityGroupSsmParam: string;
 
@@ -93,24 +96,6 @@ export class CommonStack extends cdk.Stack {
       stringValue: vpc.getVpcId(),
       description: 'Application VPC Id',
       parameterName: props.vpcSsmParam,
-    });
-
-    /** Load balancer */
-    const alb = new ApplicationLoadBalancer(this, `${props.appPrefix}Alb`, {
-      loadBalancerName: `${props.envName}-alb`,
-      vpc: vpc.getVpc(),
-    });
-
-    new ssm.StringParameter(this, `${props.appPrefix}AlbSsmParam`, {
-      stringValue: alb.getAlbArn(),
-      description: 'Application load balancer ARN',
-      parameterName: props.albArnSsmParam,
-    });
-
-    new ssm.StringParameter(this, `${props.appPrefix}AlbSgIdSsmParam`, {
-      stringValue: alb.getAlbSecurityGroupId(),
-      description: 'Application load balancer security group id',
-      parameterName: props.albSecurityGroupSsmParam,
     });
 
     /** ECS cluster */
@@ -223,5 +208,31 @@ export class CommonStack extends cdk.Stack {
         },
       );
     }
+
+
+    /** Load balancer */
+    const alb = new ApplicationLoadBalancer(this, `${props.appPrefix}Alb`, {
+      loadBalancerName: `${props.envName}-alb`,
+      vpc: vpc.getVpc(),
+      albCertSsmParam: props.domainCertSsmParam
+    });
+
+    new ssm.StringParameter(this, `${props.appPrefix}AlbSsmParam`, {
+      stringValue: alb.getAlbArn(),
+      description: 'Application load balancer ARN',
+      parameterName: props.albArnSsmParam,
+    });
+
+    new ssm.StringParameter(this, `${props.appPrefix}AlbSgIdSsmParam`, {
+      stringValue: alb.getAlbSecurityGroupId(),
+      description: 'Application load balancer security group id',
+      parameterName: props.albSecurityGroupSsmParam,
+    });
+
+    new ssm.StringParameter(this, `${props.appPrefix}AlbListenerSsmParam`, {
+      stringValue: alb.getAlbListenerArn(),
+      description: 'Application load balancer HTTPS listener ARN',
+      parameterName: props.albListenerSsmParam,
+    });
   }
 }

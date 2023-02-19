@@ -15,6 +15,7 @@ export interface EnvConfig {
   defaultEcsTaskRoleSsmParam: string;
   albArnSsmParam: string;
   albSecurityGroupSsmParam: string;
+  albListenerSsmParam: string;
   dbSecurityGroupSsmParam: string;
   domainCertSsmParam: string;
   dbCredentialSecret: string;
@@ -38,6 +39,9 @@ export interface FargateServiceConfig {
   healthCheckPath: string;
   environment: Record<string, any>[];
   secrets: Record<string, string>;
+  priority: number;
+  dockerLabels?: { [key: string]: string };
+  command?: string[]
 }
 
 export interface FrontendAppConfig {

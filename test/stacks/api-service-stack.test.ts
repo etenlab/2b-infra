@@ -10,12 +10,14 @@ import * as Route53Mock from '../mocks/route53-mock';
 import * as VpcMock from '../mocks/vpc-mock';
 import * as SsmMock from '../mocks/ssm-mock';
 import * as AlbMock from '../mocks/alb-mock';
+import * as AlbListenerMock from '../mocks/alb-listener-mock';
 import * as SgMock from '../mocks/sg-mock';
 
 route53.HostedZone.fromLookup = Route53Mock.fromLookup;
 ec2.Vpc.fromLookup = VpcMock.fromLookup;
 ssm.StringParameter.valueFromLookup = SsmMock.valueFromLookup;
 elbv2.ApplicationLoadBalancer.fromLookup = AlbMock.fromLookup;
+elbv2.ApplicationListener.fromLookup = AlbListenerMock.fromLookup;
 ec2.SecurityGroup.fromLookupById = SgMock.fromLookupById;
 
 const stackParams = {
@@ -27,6 +29,7 @@ const stackParams = {
   subdomain: 'api',
   albArnSsmParam: 'alb-arn-ssm',
   albSecurityGroupSsmParam: 'alb-sg-ssm',
+  albListenerSsmParam: 'alb-listener-ssm',
   dbSecurityGroupSsmParam: 'db-sg-ssm',
   ecsExecRoleSsmParam: 'ecs-exec-role-ssm',
   ecsTaskRoleSsmParam: 'ecs-task-role-ssm',
@@ -36,9 +39,11 @@ const stackParams = {
   healthCheckPath: '/status',
   serviceName: 'test-api',
   dockerImageUrl: 'test-image:1.0',
+  command: ['test command'],
   cpu: 256,
   memory: 512,
   serviceTasksCount: 3,
+  routingPriority: 2,
   secrets: [
     {
       taskDefSecretName: 'DB_PASSWORD',
@@ -82,6 +87,7 @@ describe('ApiServiceStack', () => {
             Essential: true,
             Image: 'test-image:1.0',
             Name: 'test-api',
+            Command: ['test command'],
             PortMappings: [
               {
                 ContainerPort: 4002,
@@ -176,18 +182,28 @@ describe('ApiServiceStack', () => {
     );
 
     template.hasResourceProperties(
-      'AWS::ElasticLoadBalancingV2::Listener',
+      'AWS::ElasticLoadBalancingV2::ListenerRule',
       Match.objectLike({
-        DefaultActions: [
+        Actions: [
           {
-            TargetGroupArn: {
-              Ref: Match.anyValue(),
-            },
-            Type: 'forward',
-          },
-        ],
-        Port: 3002,
-        Protocol: 'HTTPS',
+           TargetGroupArn: {
+            Ref: Match.anyValue(),
+           },
+           Type: "forward"
+          }
+         ],
+         Conditions: [
+          {
+           Field: "host-header",
+           HostHeaderConfig: {
+            Values: [
+             "api.example.com"
+            ]
+           }
+          }
+         ],
+         ListenerArn: Match.anyValue(),
+         "Priority": 2
       }),
     );
   });

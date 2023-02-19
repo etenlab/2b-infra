@@ -14,8 +14,8 @@ import {
   importAlb,
   importSg,
   importHostedZone,
-  importAlbCertificate,
   importIamRole,
+  importAlbListener,
 } from '../helpers';
 
 export interface ApiServiceStackProps extends cdk.StackProps {
@@ -45,6 +45,9 @@ export interface ApiServiceStackProps extends cdk.StackProps {
 
   /** SSM param name storing shared ALB security group ARN */
   readonly albSecurityGroupSsmParam: string;
+
+  /** SSM param name storing HTTPS ALB listener ARN */
+  readonly albListenerSsmParam: string;
 
   /** SSM param name storing shared database security group ARN */
   readonly dbSecurityGroupSsmParam: string;
@@ -84,6 +87,15 @@ export interface ApiServiceStackProps extends cdk.StackProps {
 
   /** List of environment variables to supply to the service */
   readonly environmentVars: Record<string, string>[];
+
+  /** Priority of this ALB target group */
+  readonly routingPriority: number;
+
+  /** Optional list of container docker labels */
+  readonly dockerLabels?: { [key: string]: string };
+
+  /** Optional command that is passed to the container. */
+  readonly command?: string[];
 }
 
 /**
@@ -105,6 +117,8 @@ export class ApiServiceStack extends cdk.Stack {
       props.albSecurityGroupSsmParam,
       `${props.appPrefix}AlbSg`,
     );
+    const albListener = importAlbListener(this, props.albListenerSsmParam)
+
     const dbSg = importSg(
       this,
       props.dbSecurityGroupSsmParam,
@@ -114,10 +128,6 @@ export class ApiServiceStack extends cdk.Stack {
       this,
       props.rootDomainName,
       `${props.appPrefix}RootHz`,
-    );
-    const listenerCertificate = importAlbCertificate(
-      this,
-      props.domainCertSsmParam,
     );
     const execRole = importIamRole(
       this,
@@ -163,6 +173,8 @@ export class ApiServiceStack extends cdk.Stack {
         containerDefinition: {
           name: props.serviceName,
           essential: true,
+          dockerLabels: props.dockerLabels,
+          command: props.command,
           portMappings: [
             {
               hostPort: props.dockerPort,
@@ -212,14 +224,11 @@ export class ApiServiceStack extends cdk.Stack {
       },
     );
 
-    /** Create HTTPS load balancer listener */
-    const albListener = alb.addListener(`${props.serviceName}AlbListener`, {
-      protocol: elbv2.ApplicationProtocol.HTTPS,
-      port: props.albPort,
-      open: true,
-      defaultAction: elbv2.ListenerAction.forward([targetGroup]),
-      certificates: [listenerCertificate],
-    });
+    albListener.addAction(`${props.serviceName}AlbAction`, {
+      priority: props.routingPriority,
+      conditions: [elbv2.ListenerCondition.hostHeaders([`${props.subdomain}.${props.rootDomainName}`])],
+      action: elbv2.ListenerAction.forward([targetGroup]),
+    })
 
     /** Create Route53 record for service subdomain */
     const route53Record = new route53.ARecord(
