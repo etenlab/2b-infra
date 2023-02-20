@@ -98,7 +98,7 @@ fargateApiServices:
     subdomain: 'discussion-api'
     serviceName: 'discussionApi'
     dockerImageUrl: 'etenlab/discussion-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
       - PORT: 80
     secrets:
@@ -115,7 +115,7 @@ fargateApiServices:
     subdomain: 'discussion-sub-api'
     serviceName: 'discussionSubApi'
     dockerImageUrl: 'etenlab/discussion-subscriptions-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
       - PORT: 80
     secrets:
@@ -132,7 +132,7 @@ fargateApiServices:
     subdomain: 'notifications-api'
     serviceName: 'notificationsApi'
     dockerImageUrl: 'etenlab/notifications-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
       - PORT: 80
     secrets:
@@ -149,7 +149,7 @@ fargateApiServices:
     subdomain: 'notifications-sub-api'
     serviceName: 'notificationsSubApi'
     dockerImageUrl: 'etenlab/notifications-subscriptions-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
       - PORT: 80
     secrets:
@@ -183,7 +183,7 @@ fargateApiServices:
     subdomain: 'file-api'
     serviceName: 'fileApi'
     dockerImageUrl: 'etenlab/file-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
       - PORT: 80
     secrets:
@@ -204,7 +204,7 @@ fargateApiServices:
     subdomain: 'voting-api'
     serviceName: 'votingApi'
     dockerImageUrl: 'etenlab/voting-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
       - PORT: 80
     secrets:
@@ -221,11 +221,9 @@ fargateApiServices:
     subdomain: 'aggregation-api'
     serviceName: 'aggregationApi'
     dockerImageUrl: 'etenlab/aggregation-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
       - PORT: 80
-      - NOTIFICATIONS_URL: https://notifications-api.dev.lab.eten.bible:3005/graphql
-      - DISCUSSIONS_URL: https://discussion-api.dev.lab.eten.bible:3003/graphql
       - SUBGRAPH_DISCUSSION_URL: https://discussion-api.dev.lab.eten.bible:3003/graphql
       - SUBGRAPH_NOTIFICATION_URL: https://notifications-api.dev.lab.eten.bible:3005/graphql
       - SUBGRAPH_SITE_TEXT_URL: https://site-text-api.dev.lab.eten.bible:3007/graphql
@@ -316,6 +314,23 @@ fargateApiServices:
       - KC_DB: 'postgres'
       - KC_DB_SCHEMA: 'public'
 
+  GraphApiStack:
+    albPort: 3015
+    dockerPort: 80
+    subdomain: 'graph-api'
+    serviceName: 'graphApi'
+    dockerImageUrl: 'etenlab/graph-api'
+    healthCheckPath: '/'
+    environment:
+      - DB_SYNCHRONIZE: 'false'
+      - PORT: 80
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+
 frontendServices:
   # Showcase is already configured as showcase.*
   ShowcaseAppStack: # configured
@@ -337,8 +352,7 @@ frontendServices:
   # dev lab eten bible
   LandingAppStack:
     domainName: landing.dev.lab.eten.bible
-  # Storybook is already configured as storybook.*
   Storybook:
-    domainName: sb.dev.lab.eten.bible
+    domainName: storybook.dev.lab.eten.bible
   DocsStack:
     domainName: docs.dev.lab.eten.bible
