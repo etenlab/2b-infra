@@ -317,6 +317,7 @@ fargateApiServices:
   GraphApiStack:
     albPort: 3015
     dockerPort: 80
+    priority: 160
     subdomain: 'graph-api'
     serviceName: 'graphApi'
     dockerImageUrl: 'etenlab/graph-api'
