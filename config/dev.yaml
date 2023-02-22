@@ -71,7 +71,8 @@ fargateApiServices:
       DB_PASSWORD: password
       DB_NAME: dbname
       KEYCLOAK_URL: keycloak-url
-      KEYCLOAK_CLIENT_ID: keycloak-client-id
+      KEYCLOAK_REALM: keycloak-realm
+      KEYCLOAK_CLIENTS: keycloak-clients
       CORS_ALLOW_ORIGINS: database-api-cors-allow-origins
 
   ScriptureApiStack:
