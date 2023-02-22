@@ -224,11 +224,11 @@ fargateApiServices:
     healthCheckPath: '/'
     environment:
       - PORT: 80
-      - SUBGRAPH_DISCUSSION_URL: https://discussion-api.dev.lab.eten.bible:3003/graphql
-      - SUBGRAPH_NOTIFICATION_URL: https://notifications-api.dev.lab.eten.bible:3005/graphql
-      - SUBGRAPH_SITE_TEXT_URL: https://site-text-api.dev.lab.eten.bible:3007/graphql
-      - SUBGRAPH_VOTING_URL: https://voting-api.dev.lab.eten.bible:3009/graphql
-      - SUBGRAPH_SCRIPTURE_URL: https://scripture-api.dev.lab.eten.bible:3002/graphql
+      - SUBGRAPH_DISCUSSION_URL: https://discussion-api.dev.lab.eten.bible/graphql
+      - SUBGRAPH_NOTIFICATION_URL: https://notifications-api.dev.lab.eten.bible/graphql
+      - SUBGRAPH_SITE_TEXT_URL: https://site-text-api.dev.lab.eten.bible/graphql
+      - SUBGRAPH_VOTING_URL: https://voting-api.dev.lab.eten.bible/graphql
+      - SUBGRAPH_SCRIPTURE_URL: https://scripture-api.dev.lab.eten.bible/graphql
     secrets:
 
   DataLoadApiStack:
