@@ -340,7 +340,7 @@ fargateApiServices:
 frontendServices:
   # Showcase is already configured as showcase.*
   ShowcaseAppStack: # configured
-    domainName: 'sc.dev.lab.eten.bible'
+    domainName: 'showcase.dev.lab.eten.bible'
   GraphAppStack:
     domainName: 'graph.dev.lab.eten.bible'
   TranslationAppStack:
