@@ -37,11 +37,11 @@ export interface FargateServiceConfig {
   memory: number;
   taskCount: number;
   healthCheckPath: string;
-  environment: Record<string, any>[];
+  environment: Record<string, string>;
   secrets: Record<string, string>;
   priority: number;
   dockerLabels?: { [key: string]: string };
-  command?: string[]
+  command?: string[];
 }
 
 export interface FrontendAppConfig {

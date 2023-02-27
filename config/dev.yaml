@@ -44,8 +44,8 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/admin-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 8101
-      - RUN_MIGRATIONS: false
+      PORT: 8101
+      RUN_MIGRATIONS: false
     secrets:
       DB_PASSWORD: password
       DB_USERNAME: username
@@ -62,8 +62,8 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/database-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 8101
-      - RUN_MIGRATIONS: false
+      PORT: 8101
+      RUN_MIGRATIONS: false
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -84,7 +84,7 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/scripture-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -101,7 +101,7 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/discussion-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -118,7 +118,7 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/discussion-subscriptions-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -135,7 +135,7 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/notifications-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -152,7 +152,7 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/notifications-subscriptions-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -169,7 +169,7 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/site-text-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -186,7 +186,7 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/file-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -207,7 +207,7 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/voting-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -224,12 +224,12 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/aggregation-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
-      - SUBGRAPH_DISCUSSION_URL: https://discussion-api.dev.lab.eten.bible/graphql
-      - SUBGRAPH_NOTIFICATION_URL: https://notifications-api.dev.lab.eten.bible/graphql
-      - SUBGRAPH_SITE_TEXT_URL: https://site-text-api.dev.lab.eten.bible/graphql
-      - SUBGRAPH_VOTING_URL: https://voting-api.dev.lab.eten.bible/graphql
-      - SUBGRAPH_SCRIPTURE_URL: https://scripture-api.dev.lab.eten.bible/graphql
+      PORT: 80
+      SUBGRAPH_DISCUSSION_URL: https://discussion-api.dev.lab.eten.bible/graphql
+      SUBGRAPH_NOTIFICATION_URL: https://notifications-api.dev.lab.eten.bible/graphql
+      SUBGRAPH_SITE_TEXT_URL: https://site-text-api.dev.lab.eten.bible/graphql
+      SUBGRAPH_VOTING_URL: https://voting-api.dev.lab.eten.bible/graphql
+      SUBGRAPH_SCRIPTURE_URL: https://scripture-api.dev.lab.eten.bible/graphql
     secrets:
 
   DataLoadApiStack:
@@ -241,7 +241,7 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/data-load-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -259,7 +259,7 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/oldb-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -285,11 +285,11 @@ fargateApiServices:
       PG_DATABASE_URL: pg-database-url
       HASURA_GRAPHQL_METADATA_DATABASE_URL: hasura-graphql-metadata-database-url
     environment:
-      - HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
-      - HASURA_GRAPHQL_DEV_MODE: 'false'
-      - HASURA_GRAPHQL_ADMIN_SECRET: 'etenlabhasuraadminsecret'
-      - HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
-      - HASURA_GRAPHQL_ENABLED_LOG_TYPES: 'startup, http-log, webhook-log, websocket-log, query-log'
+      HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
+      HASURA_GRAPHQL_DEV_MODE: 'false'
+      HASURA_GRAPHQL_ADMIN_SECRET: 'etenlabhasuraadminsecret'
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: 'startup, http-log, webhook-log, websocket-log, query-log'
 
   # Requires creating a database manually and putting necessary secrets in ASM.
   # CREATE USER keycloak WITH ENCRYPTED PASSWORD 'KJHU9VrcK38GDGQu3BZHVNYqDqYkt22jP5Vkrd8q';
@@ -312,9 +312,9 @@ fargateApiServices:
       KEYCLOAK_ADMIN: keycloak-admin-username
       KEYCLOAK_ADMIN_PASSWORD: keycloak-admin-password
     environment:
-      # - KC_DB: 'postgres'
-      # - KC_HOSTNAME_ADMIN_URL: https://keycloak.dev.lab.eten.bible
-      - KC_PROXY: edge
+      # KC_DB: 'postgres'
+      # KC_HOSTNAME_ADMIN_URL: https://keycloak.dev.lab.eten.bible
+      KC_PROXY: edge
     command:
       - start-dev
       - --features
@@ -329,8 +329,8 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/graph-api'
     healthCheckPath: '/'
     environment:
-      - DB_SYNCHRONIZE: 'false'
-      - PORT: 80
+      DB_SYNCHRONIZE: 'false'
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
