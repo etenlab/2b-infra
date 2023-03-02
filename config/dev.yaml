@@ -92,6 +92,24 @@ fargateApiServices:
       DB_PASSWORD: password
       DB_NAME: dbname
 
+# Example how to add new stack from docker image built from API repo
+  LearnScriptureApiStack:
+    albPort: 3017
+    dockerPort: 80
+    priority: 35
+    subdomain: 'scripture-api-test'
+    serviceName: 'learnScriptureApi'
+    dockerImageUrl: 'etenlab/scripture-api-test'
+    healthCheckPath: '/'
+    environment:
+      PORT: 80
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+
   DiscussionApiStack:
     albPort: 3003
     dockerPort: 80
@@ -291,6 +309,25 @@ fargateApiServices:
       HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: 'startup, http-log, webhook-log, websocket-log, query-log'
 
+# Example how to add new stack from 3rd party docker image
+  LearnGraphqlEngineStack:
+    albPort: 3016
+    dockerPort: 8080
+    priority: 145
+    subdomain: 'graphql-engine-test'
+    serviceName: 'learnGraphqlEngine'
+    dockerImageUrl: 'hasura/graphql-engine:v2.13.2'
+    healthCheckPath: '/console'
+    secrets:
+      PG_DATABASE_URL: pg-database-url
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: hasura-graphql-metadata-database-url
+    environment:
+      HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
+      HASURA_GRAPHQL_DEV_MODE: 'false'
+      HASURA_GRAPHQL_ADMIN_SECRET: 'etenlabhasuraadminsecret'
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: 'startup, http-log, webhook-log, websocket-log, query-log'
+
   # Requires creating a database manually and putting necessary secrets in ASM.
   # CREATE USER keycloak WITH ENCRYPTED PASSWORD 'KJHU9VrcK38GDGQu3BZHVNYqDqYkt22jP5Vkrd8q';
   # CREATE DATABASE keycloak_db;
@@ -363,3 +400,10 @@ frontendServices:
     domainName: storybook.dev.lab.eten.bible
   DocsStack:
     domainName: docs.dev.lab.eten.bible
+
+# Example how to add new Frontend stack
+  LearnShowcaseAppStack:
+    domainName: 'showcase-test.dev.lab.eten.bible'
+
+# The command is cdk deploy -c env=dev dev<NEW_FRONTEND_STACK_NAME>
+# More details at https://docs.dev.lab.eten.bible/docs/Support/aws-cdk
