@@ -272,6 +272,11 @@ fargateApiServices:
       KEYCLOAK_CLIENT_SECRET: keyloak-client-secret
       KEYCLOAK_ADMIN_CLIENT_ID: keycloak-admin-client-id
       KEYCLOAK_ADMIN_CLIENT_SECRET: keycloak-admin-client-secret
+      AIRTABLE_BASE_ID: airtable-base-id
+      AIRTABLE_API_KEY: airtable-api-key
+      AIRTABLE_TABLE_ID: airtable-table-id
+      AIRTABLE_TABLE_NAME: airtable-table-name
+      AIRTABLE_TOTAL_RECORDS: airtable-total-recorts
 
   GraphqlEngineStack:
     albPort: 3012
