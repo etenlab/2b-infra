@@ -60,7 +60,6 @@ describe('CommonStack', () => {
   test('Creates new hosted zone for environment if specified', () => {
     const params = {
       ...stackParams,
-      rootDomainName: 'example.com',
       envDomainName: 'test.example.com',
       createEnvHostedZone: true,
     };

@@ -11,7 +11,6 @@ const stackParams = {
   envName: 'qa',
   appPrefix: 'testApp',
   domainName: 'app.example.com',
-  rootDomainName: 'example.com',
 };
 
 describe('FrontendStack', () => {

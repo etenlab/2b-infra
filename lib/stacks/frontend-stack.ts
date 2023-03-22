@@ -23,9 +23,6 @@ export interface FrontendStackProps extends cdk.StackProps {
    * Must be a subdomain of the specified root domain.
    */
   readonly domainName: string;
-
-  /** Registered root domain name */
-  readonly rootDomainName: string;
 }
 
 /**
@@ -73,9 +70,11 @@ export class FrontendStack extends cdk.Stack {
     );
 
     /** Requests ACM certificate for Cloudfront distribution */
+    const [subdomain, ...rootdomain] = props.domainName.split('.')
+
     const rootHostedZone = importHostedZone(
       this,
-      props.rootDomainName,
+      rootdomain.join('.'),
       `${props.appPrefix}RootHz`,
     );
     const certificate = new acm.DnsValidatedCertificate(

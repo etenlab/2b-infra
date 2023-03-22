@@ -6,9 +6,7 @@ export interface EnvConfig {
   vpcCidr: string;
   createEnvHostedZone: boolean;
   natGatewaysCount: number;
-  rootDomainName: string;
-  envDomainName?: string;
-  rootDomainCertArn?: string;
+  envDomainName: string;
   ecsClusterName: string;
   vpcSsmParam: string;
   defaultEcsExecRoleSsmParam: string;
@@ -17,19 +15,19 @@ export interface EnvConfig {
   albSecurityGroupSsmParam: string;
   albListenerSsmParam: string;
   dbSecurityGroupSsmParam: string;
-  domainCertSsmParam: string;
+
   dbCredentialSecret: string;
   dbPublicAccess: boolean;
-  showcaseApp: FrontendAppConfig;
-  databaseApi: FargateServiceConfig;
-  adminApi: FargateServiceConfig;
   fargateApiServices: { [key: string]: FargateServiceConfig };
   frontendServices: { [key: string]: FrontendAppConfig };
+  dns: DNSConfig[];
 }
 
 export interface FargateServiceConfig {
   dockerPort: number;
+  rootdomain: string;
   subdomain: string;
+  rootDomainCertSsm: string;
   albPort: number;
   serviceName: string;
   dockerImageUrl: string;
@@ -46,4 +44,11 @@ export interface FargateServiceConfig {
 
 export interface FrontendAppConfig {
   domainName: string;
+}
+
+export interface DNSConfig {
+  existingRootHostedZone: string;
+  createEnvHostedZone: Boolean;
+  rootDomainCertSsmParam: string;
+  envDomainCertSsmParam: string;
 }

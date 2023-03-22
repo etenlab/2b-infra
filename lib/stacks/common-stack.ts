@@ -13,6 +13,13 @@ import {
 } from '../components';
 import { importHostedZone } from '../helpers';
 
+interface DNSConfig {
+  existingRootHostedZone: string;
+  createEnvHostedZone: Boolean;
+  rootDomainCertSsmParam: string;
+  envDomainCertSsmParam: string;
+}
+
 /**
  * Properties required to create shared project infrastructure
  */
@@ -35,9 +42,6 @@ export interface CommonStackProps extends cdk.StackProps {
   /** SSM param name to store ECS task role ARN */
   readonly ecsTaskRoleSsmParam: string;
 
-  /** SSM param name to store ACM certificate ARN */
-  readonly domainCertSsmParam: string;
-
   /** Name of the ECS cluster to create */
   readonly ecsClusterName: string;
 
@@ -53,23 +57,13 @@ export interface CommonStackProps extends cdk.StackProps {
   /** Number of nat gateways to create */
   readonly natGatewaysCount: number;
 
-  /** Registered root domain name */
-  readonly rootDomainName?: string;
-
   /** Whether to create a separate hosted zone for deployed environment */
   readonly createEnvHostedZone?: boolean;
 
-  /**
-   * Domain name for deployed environment.
-   * Required if createEnvHostedZone is "true".
-   *  */
-  readonly envDomainName?: string;
+  /** Domain name for deployed environment.*/
+  readonly envDomainName: string;
 
-  /**
-   * ARN of ACM certificate for the root domain.
-   * Required if createEnvHostedZone is "false".
-   */
-  readonly rootDomainCertArn?: string;
+  readonly dns: DNSConfig[];
 }
 
 /**
@@ -132,89 +126,88 @@ export class CommonStack extends cdk.Stack {
     });
 
     /**
-     * Create Route53 hosted zone for environment, i.e. dev.rootzone.com.
-     * Note that rootzone.com must already exist in the deployed environment.
+     * Create Route53 hosted zones.
+     * Note that root hosted zone must already exist in the deployed environment.
      */
-    if (props.createEnvHostedZone) {
-      if (!props.envDomainName || !props.rootDomainName) {
-        throw new Error(
-          'Can not create hosted zone as either envDomainName or rootDomainName is not specified.',
-        );
-      }
+    props.dns.forEach((dnsConfig) => {
+      const {
+        existingRootHostedZone: rootHzName,
+        createEnvHostedZone,
+        rootDomainCertSsmParam,
+        envDomainCertSsmParam,
+      } = dnsConfig;
+
+      const rootHzPrefix = `${props.appPrefix}${rootHzName}`;
+      const envHzPrefix = `${props.appPrefix}${props.envDomainName}${rootHzName}`;
+
       const rootHostedZone = importHostedZone(
         this,
-        props.rootDomainName,
-        `${props.appPrefix}RootHz`,
+        rootHzName,
+        `${rootHzPrefix}RootHz`,
       );
 
-      const envHostedZone = new route53.PublicHostedZone(
+      const rootHzCertificate = new acm.Certificate(
         this,
-        `${props.appPrefix}${props.envName}PublicHz`,
+        `${rootHzPrefix}Cert`,
         {
-          zoneName: props.envDomainName,
-          comment: `Public hosted zone for ${props.envName} environment`,
+          domainName: rootHzName,
+          subjectAlternativeNames: [`*.${rootHzName}`],
+          validation: acm.CertificateValidation.fromDns(rootHostedZone),
         },
       );
 
-      /**
-       * Add NS records to the existing root hosted zone
-       * to enable DNS validation for env certificate.
-       */
-      const rootZoneNsRecord = new route53.NsRecord(
-        this,
-        `${props.appPrefix}RootNSRecord`,
-        {
-          zone: rootHostedZone,
-          recordName: props.envDomainName,
-          values: envHostedZone.hostedZoneNameServers || [],
-          ttl: cdk.Duration.minutes(30),
-        },
-      );
+      new ssm.StringParameter(this, `${rootHzPrefix}CertSsmParam`, {
+        stringValue: rootHzCertificate.certificateArn,
+        description: `Certificate arn for ${rootHzName}`,
+        parameterName: rootDomainCertSsmParam,
+      });
 
-      const certificate = new acm.Certificate(
-        this,
-        `${props.appPrefix}${props.envName}Cert`,
-        {
+      if (createEnvHostedZone) {
+        const envHostedZone = new route53.PublicHostedZone(
+          this,
+          `${envHzPrefix}PublicHz`,
+          {
+            zoneName: props.envDomainName,
+            comment: `Public hosted zone for ${envHzPrefix}`,
+          },
+        );
+
+        /**
+         * Add NS records to the existing root hosted zone
+         * to enable DNS validation for env certificate.
+         */
+        const rootZoneNsRecord = new route53.NsRecord(
+          this,
+          `${envHzPrefix}RootNSRecord`,
+          {
+            zone: rootHostedZone,
+            recordName: props.envDomainName,
+            values: envHostedZone.hostedZoneNameServers || [],
+            ttl: cdk.Duration.minutes(30),
+          },
+        );
+
+        const certificate = new acm.Certificate(this, `${envHzPrefix}Cert`, {
           domainName: props.envDomainName,
           subjectAlternativeNames: [`*.${props.envDomainName}`],
           validation: acm.CertificateValidation.fromDns(envHostedZone),
-        },
-      );
+        });
 
-      new ssm.StringParameter(
-        this,
-        `${props.appPrefix}${props.envName}CertSsmParam`,
-        {
+        new ssm.StringParameter(this, `${envHzPrefix}CertSsmParam`, {
           stringValue: certificate.certificateArn,
-          description: `Certificate arn for ${props.envDomainName}`,
-          parameterName: props.domainCertSsmParam,
-        },
-      );
-    }
-
-    if (!props.createEnvHostedZone) {
-      if (!props.rootDomainCertArn) {
-        throw new Error(
-          'ACM certificate for root domain is required if subdomain is not created for the deployed environment. ',
-        );
+          description: `Certificate arn for ${envHzPrefix}`,
+          parameterName: envDomainCertSsmParam,
+        });
       }
-      new ssm.StringParameter(
-        this,
-        `${props.appPrefix}${props.envName}CertSsmParam`,
-        {
-          stringValue: props.rootDomainCertArn,
-          description: `Certificate arn for root hosted zone`,
-          parameterName: props.domainCertSsmParam,
-        },
-      );
-    }
-
+    });
 
     /** Load balancer */
+    const certificatesSsmParams = props.dns.map((dnsConfig) => dnsConfig.rootDomainCertSsmParam)
+
     const alb = new ApplicationLoadBalancer(this, `${props.appPrefix}Alb`, {
       loadBalancerName: `${props.envName}-alb`,
       vpc: vpc.getVpc(),
-      albCertSsmParam: props.domainCertSsmParam
+      albCertSsmParams: certificatesSsmParams,
     });
 
     new ssm.StringParameter(this, `${props.appPrefix}AlbSsmParam`, {
