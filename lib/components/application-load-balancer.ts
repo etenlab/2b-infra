@@ -15,8 +15,8 @@ export interface AppLoadBalancerProps {
   /** VPC to create ALB into */
   vpc: ec2.IVpc;
 
-  /** List of ACM certificate to associate with this ALB */
-  albCertSsmParams: string[];
+  /** List of certificates to associate with this ALB */
+  certificateArns: string[];
 }
 
 /**
@@ -32,12 +32,7 @@ export class ApplicationLoadBalancer extends Construct {
   constructor(scope: Construct, id: string, props: AppLoadBalancerProps) {
     super(scope, id);
 
-    const certificates = [];
-
-    for (const certSmm in props.albCertSsmParams) {
-      const certificate = importAlbCertificate(this, certSmm);
-      certificates.push(certificate);
-    }
+    const certificates = props.certificateArns.map(importAlbCertificate)
 
     this.albSecurityGroup = new ec2.SecurityGroup(
       this,

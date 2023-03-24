@@ -10,7 +10,7 @@ vpcCidr: '10.10.0.0/16'
 natGatewaysCount: 0
 
 # Env domain setup
-envDomainName: 'prod'
+envSubdomain: 'prod'
 
 # App ECS cluster name
 ecsClusterName: 'prod-cluster'
@@ -21,6 +21,7 @@ defaultEcsExecRoleSsmParam: '/prod/ecs-default-execution-role'
 defaultEcsTaskRoleSsmParam: '/prod/ecs-default-task-role'
 albArnSsmParam: '/prod/alb-arn'
 albSecurityGroupSsmParam: '/prod/alb-sg-id'
+albListenerSsmParam: '/prod/alb-listener-arn'
 dbSecurityGroupSsmParam: '/prod/db-sg-id'
 
 # Secrets Manager params to create
@@ -51,8 +52,8 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/database-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 8101
-      - RUN_MIGRATIONS: false
+      PORT: 8101
+      RUN_MIGRATIONS: false
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -74,7 +75,7 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/oldb-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -91,7 +92,7 @@ fargateApiServices:
       AIRTABLE_API_KEY: airtable-api-key
       AIRTABLE_TABLE_ID: airtable-table-id
       AIRTABLE_TABLE_NAME: airtable-table-name
-      AIRTABLE_TOTAL_RECORDS: airtable-total-recorts
+      AIRTABLE_TOTAL_RECORDS: airtable-total-records
 
   CPGServerStack:
     albPort: 3003
@@ -103,8 +104,8 @@ fargateApiServices:
     dockerImageUrl: 'etenlab/cpg-server'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
-      - CORS_ALLOW_ORIGINS: '*'
+      PORT: 80
+      CORS_ALLOW_ORIGINS: '*'
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -125,6 +126,8 @@ fargateApiServices:
     serviceName: 'keycloak'
     dockerImageUrl: 'quay.io/keycloak/keycloak:latest'
     healthCheckPath: '/'
+    cpu: 2048
+    memory: 4096
     secrets:
       KC_DB_USERNAME: keycloak-username
       KC_DB_PASSWORD: keycloak-password
@@ -134,8 +137,6 @@ fargateApiServices:
       KEYCLOAK_ADMIN: keycloak-admin-username
       KEYCLOAK_ADMIN_PASSWORD: keycloak-admin-password
     environment:
-      # KC_DB: 'postgres'
-      # KC_HOSTNAME_ADMIN_URL: https://keycloak.dev.lab.eten.bible
       KC_PROXY: edge
     command:
       - start-dev

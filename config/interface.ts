@@ -6,7 +6,7 @@ export interface EnvConfig {
   vpcCidr: string;
   createEnvHostedZone: boolean;
   natGatewaysCount: number;
-  envDomainName: string;
+  envSubdomain: string;
   ecsClusterName: string;
   vpcSsmParam: string;
   defaultEcsExecRoleSsmParam: string;

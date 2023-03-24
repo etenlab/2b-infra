@@ -10,7 +10,7 @@ vpcCidr: '10.0.0.0/16'
 natGatewaysCount: 0
 
 # Env domain setup
-envDomainName: 'dev'
+envSubdomain: 'dev'
 
 # App ECS cluster name
 ecsClusterName: 'dev-cluster'
@@ -32,7 +32,7 @@ dbPublicAccess: true
 
 # DNS setup
 dns:
-  - existingRootHostedZone:  'dev.lab.eten.bible'
+  - existingRootHostedZone: 'dev.lab.eten.bible'
     createEnvHostedZone: false
     rootDomainCertSsmParam: '/dev/dev.lab.eten.bible/root-domain-certificate'
     envDomainCertSsmParam: '/dev/dev.lab.eten.bible/env-domain-certificate'

@@ -70,11 +70,12 @@ export class FrontendStack extends cdk.Stack {
     );
 
     /** Requests ACM certificate for Cloudfront distribution */
-    const [subdomain, ...rootdomain] = props.domainName.split('.')
+    const [subdomain, ...rest] = props.domainName.split('.');
+    const rootdomain = rest.length > 2 ? rest.join('.') : props.domainName;
 
     const rootHostedZone = importHostedZone(
       this,
-      rootdomain.join('.'),
+      rootdomain,
       `${props.appPrefix}RootHz`,
     );
     const certificate = new acm.DnsValidatedCertificate(

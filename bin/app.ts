@@ -28,7 +28,7 @@ new CommonStack(app, `${config.environment}CommonStack`, {
   ecsClusterName: config.ecsClusterName,
   albSecurityGroupSsmParam: config.albSecurityGroupSsmParam,
   createEnvHostedZone: config.createEnvHostedZone,
-  envDomainName: config.envDomainName,
+  envSubdomain: config.envSubdomain,
   dns: config.dns
 });
 
@@ -73,7 +73,6 @@ Object.entries(config.fargateApiServices).forEach(([name, service]) => {
     ecsExecRoleSsmParam: config.defaultEcsExecRoleSsmParam,
     ecsTaskRoleSsmParam: config.defaultEcsTaskRoleSsmParam,
     ecsClusterName: config.ecsClusterName,
-    domainCertSsmParam: service.rootDomainCertSsm,
     rootDomainName: service.rootdomain,
     subdomain: service.subdomain,
     dockerPort: service.dockerPort,

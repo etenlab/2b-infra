@@ -60,8 +60,8 @@ export interface CommonStackProps extends cdk.StackProps {
   /** Whether to create a separate hosted zone for deployed environment */
   readonly createEnvHostedZone?: boolean;
 
-  /** Domain name for deployed environment.*/
-  readonly envDomainName: string;
+  /** Subdomain name for deployed environment.*/
+  readonly envSubdomain: string;
 
   readonly dns: DNSConfig[];
 }
@@ -129,6 +129,7 @@ export class CommonStack extends cdk.Stack {
      * Create Route53 hosted zones.
      * Note that root hosted zone must already exist in the deployed environment.
      */
+    const albCertificates = new Set<string>()
     props.dns.forEach((dnsConfig) => {
       const {
         existingRootHostedZone: rootHzName,
@@ -138,7 +139,7 @@ export class CommonStack extends cdk.Stack {
       } = dnsConfig;
 
       const rootHzPrefix = `${props.appPrefix}${rootHzName}`;
-      const envHzPrefix = `${props.appPrefix}${props.envDomainName}${rootHzName}`;
+      const envHzPrefix = `${props.appPrefix}${props.envSubdomain}${rootHzName}`;
 
       const rootHostedZone = importHostedZone(
         this,
@@ -161,13 +162,16 @@ export class CommonStack extends cdk.Stack {
         description: `Certificate arn for ${rootHzName}`,
         parameterName: rootDomainCertSsmParam,
       });
+      albCertificates.add(rootHzCertificate.certificateArn)
+
 
       if (createEnvHostedZone) {
+        const envDomainName = `${props.envSubdomain}.${rootHzName}`
         const envHostedZone = new route53.PublicHostedZone(
           this,
           `${envHzPrefix}PublicHz`,
           {
-            zoneName: props.envDomainName,
+            zoneName: envDomainName,
             comment: `Public hosted zone for ${envHzPrefix}`,
           },
         );
@@ -181,15 +185,15 @@ export class CommonStack extends cdk.Stack {
           `${envHzPrefix}RootNSRecord`,
           {
             zone: rootHostedZone,
-            recordName: props.envDomainName,
+            recordName: envDomainName,
             values: envHostedZone.hostedZoneNameServers || [],
             ttl: cdk.Duration.minutes(30),
           },
         );
 
         const certificate = new acm.Certificate(this, `${envHzPrefix}Cert`, {
-          domainName: props.envDomainName,
-          subjectAlternativeNames: [`*.${props.envDomainName}`],
+          domainName: envDomainName,
+          subjectAlternativeNames: [`*.${envDomainName}`],
           validation: acm.CertificateValidation.fromDns(envHostedZone),
         });
 
@@ -198,16 +202,16 @@ export class CommonStack extends cdk.Stack {
           description: `Certificate arn for ${envHzPrefix}`,
           parameterName: envDomainCertSsmParam,
         });
+
+        albCertificates.add(certificate.certificateArn)
       }
     });
 
     /** Load balancer */
-    const certificatesSsmParams = props.dns.map((dnsConfig) => dnsConfig.rootDomainCertSsmParam)
-
     const alb = new ApplicationLoadBalancer(this, `${props.appPrefix}Alb`, {
       loadBalancerName: `${props.envName}-alb`,
       vpc: vpc.getVpc(),
-      albCertSsmParams: certificatesSsmParams,
+      certificateArns: [...albCertificates]
     });
 
     new ssm.StringParameter(this, `${props.appPrefix}AlbSsmParam`, {
