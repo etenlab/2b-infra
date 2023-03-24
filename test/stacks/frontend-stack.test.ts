@@ -131,6 +131,12 @@ describe('FrontendStack', () => {
               ResponseCode: 200,
               ResponsePagePath: '/index.html',
             },
+            {
+              ErrorCachingMinTTL: 10,
+              ErrorCode: 403,
+              ResponseCode: 200,
+              ResponsePagePath: '/index.html',
+            },
           ],
           DefaultCacheBehavior: {
             AllowedMethods: [

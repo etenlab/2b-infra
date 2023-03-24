@@ -10,6 +10,7 @@ route53.HostedZone.fromLookup = Route53Mock.fromLookup;
 const stackParams = {
   cidr: '10.0.0.0/16',
   envName: 'test',
+  envSubdomain: 'test',
   vpcSsmParam: 'test-vpc-ssm',
   ecsExecRoleSsmParam: 'test-exec-role-ssm',
   ecsTaskRoleSsmParam: 'test-task-role-ssm',
@@ -22,6 +23,14 @@ const stackParams = {
   appPrefix: 'qa',
   createEnvHostedZone: false,
   rootDomainCertArn: 'arn:aws:acm:us-east-2:111111111:certificate/000000000',
+  dns: [
+    {
+      existingRootHostedZone: 'example.com',
+      createEnvHostedZone: false,
+      rootDomainCertSsmParam: '/test/example.com/root-domain-certificate',
+      envDomainCertSsmParam: '/test/example.com/env-domain-certificate',
+    },
+  ],
 };
 
 describe('CommonStack', () => {
@@ -60,8 +69,14 @@ describe('CommonStack', () => {
   test('Creates new hosted zone for environment if specified', () => {
     const params = {
       ...stackParams,
-      envDomainName: 'test.example.com',
-      createEnvHostedZone: true,
+      dns: [
+        {
+          existingRootHostedZone: 'example.com',
+          createEnvHostedZone: true,
+          rootDomainCertSsmParam: '/test/example.com/root-domain-certificate',
+          envDomainCertSsmParam: '/test/example.com/env-domain-certificate',
+        },
+      ],
     };
 
     const app = new cdk.App();
