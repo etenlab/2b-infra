@@ -10,10 +10,7 @@ vpcCidr: '10.0.0.0/16'
 natGatewaysCount: 0
 
 # Env domain setup
-rootDomainName: 'dev.lab.eten.bible'
-createEnvHostedZone: false # set to "true" if you want to create envDomainName, i.e."dev.dev.lab.eten.bible"
-envDomainName: 'dev.lab.eten.bible' # must be present if createEnvHostedZone equals "true"
-rootDomainCertArn: 'arn:aws:acm:us-east-2:808019037620:certificate/ea3ae498-f9e9-42df-a8aa-38541ee5ca44' # required if createEnvHostedZone is "false"
+envSubdomain: 'dev'
 
 # App ECS cluster name
 ecsClusterName: 'dev-cluster'
@@ -26,7 +23,6 @@ albArnSsmParam: '/dev/alb-arn'
 albSecurityGroupSsmParam: '/dev/alb-sg-id'
 albListenerSsmParam: '/dev/alb-listener-arn'
 dbSecurityGroupSsmParam: '/dev/db-sg-id'
-domainCertSsmParam: '/dev/root-domain-certificate'
 
 # Secrets Manager params to create
 dbCredentialSecret: 'dev/db/credentials'
@@ -34,18 +30,27 @@ dbCredentialSecret: 'dev/db/credentials'
 # Whether database is accessible outside of VPC
 dbPublicAccess: true
 
+# DNS setup
+dns:
+  - existingRootHostedZone: 'dev.lab.eten.bible'
+    createEnvHostedZone: false
+    rootDomainCertSsmParam: '/dev/dev.lab.eten.bible/root-domain-certificate'
+    envDomainCertSsmParam: '/dev/dev.lab.eten.bible/env-domain-certificate'
+
 fargateApiServices:
   AdminApiStack:
     albPort: 3000
     dockerPort: 8101
     priority: 10
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'admin-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'adminApi'
     dockerImageUrl: 'etenlab/admin-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 8101
-      - RUN_MIGRATIONS: false
+      PORT: 8101
+      RUN_MIGRATIONS: false
     secrets:
       DB_PASSWORD: password
       DB_USERNAME: username
@@ -57,13 +62,15 @@ fargateApiServices:
     albPort: 3001
     dockerPort: 8101
     priority: 20
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'db-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'databaseApi'
     dockerImageUrl: 'etenlab/database-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 8101
-      - RUN_MIGRATIONS: false
+      PORT: 8101
+      RUN_MIGRATIONS: false
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -71,19 +78,22 @@ fargateApiServices:
       DB_PASSWORD: password
       DB_NAME: dbname
       KEYCLOAK_URL: keycloak-url
-      KEYCLOAK_CLIENT_ID: keycloak-client-id
+      KEYCLOAK_REALM: keycloak-realm
+      KEYCLOAK_CLIENTS: keycloak-clients
       CORS_ALLOW_ORIGINS: database-api-cors-allow-origins
 
   ScriptureApiStack:
     albPort: 3002
     dockerPort: 80
     priority: 30
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'scripture-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'scriptureApi'
     dockerImageUrl: 'etenlab/scripture-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -95,12 +105,14 @@ fargateApiServices:
     albPort: 3003
     dockerPort: 80
     priority: 40
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'discussion-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'discussionApi'
     dockerImageUrl: 'etenlab/discussion-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -112,12 +124,14 @@ fargateApiServices:
     albPort: 3004
     dockerPort: 80
     priority: 50
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'discussion-sub-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'discussionSubApi'
     dockerImageUrl: 'etenlab/discussion-subscriptions-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -129,12 +143,14 @@ fargateApiServices:
     albPort: 3005
     dockerPort: 80
     priority: 60
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'notifications-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'notificationsApi'
     dockerImageUrl: 'etenlab/notifications-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -146,12 +162,14 @@ fargateApiServices:
     albPort: 3006
     dockerPort: 80
     priority: 70
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'notifications-sub-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'notificationsSubApi'
     dockerImageUrl: 'etenlab/notifications-subscriptions-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -163,12 +181,14 @@ fargateApiServices:
     albPort: 3007
     dockerPort: 80
     priority: 80
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'site-text-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'siteTextApi'
     dockerImageUrl: 'etenlab/site-text-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -180,12 +200,14 @@ fargateApiServices:
     albPort: 3008
     dockerPort: 80
     priority: 90
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'file-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'fileApi'
     dockerImageUrl: 'etenlab/file-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -201,12 +223,14 @@ fargateApiServices:
     albPort: 3009
     dockerPort: 80
     priority: 100
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'voting-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'votingApi'
     dockerImageUrl: 'etenlab/voting-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -218,31 +242,33 @@ fargateApiServices:
     albPort: 3010
     dockerPort: 80
     priority: 110
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'aggregation-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'aggregationApi'
     dockerImageUrl: 'etenlab/aggregation-api'
-    healthCheckPath: '/graphql'
+    healthCheckPath: '/'
     environment:
-      - PORT: 80
-      - NOTIFICATIONS_URL: https://notifications-api.dev.lab.eten.bible:3005/graphql
-      - DISCUSSIONS_URL: https://discussion-api.dev.lab.eten.bible:3003/graphql
-      - SUBGRAPH_DISCUSSION_URL: https://discussion-api.dev.lab.eten.bible:3003/graphql
-      - SUBGRAPH_NOTIFICATION_URL: https://notifications-api.dev.lab.eten.bible:3005/graphql
-      - SUBGRAPH_SITE_TEXT_URL: https://site-text-api.dev.lab.eten.bible:3007/graphql
-      - SUBGRAPH_VOTING_URL: https://voting-api.dev.lab.eten.bible:3009/graphql
-      - SUBGRAPH_SCRIPTURE_URL: https://scripture-api.dev.lab.eten.bible:3002/graphql
+      PORT: 80
+      SUBGRAPH_DISCUSSION_URL: https://discussion-api.dev.lab.eten.bible/graphql
+      SUBGRAPH_NOTIFICATION_URL: https://notifications-api.dev.lab.eten.bible/graphql
+      SUBGRAPH_SITE_TEXT_URL: https://site-text-api.dev.lab.eten.bible/graphql
+      SUBGRAPH_VOTING_URL: https://voting-api.dev.lab.eten.bible/graphql
+      SUBGRAPH_SCRIPTURE_URL: https://scripture-api.dev.lab.eten.bible/graphql
     secrets:
 
   DataLoadApiStack:
     albPort: 3011
     dockerPort: 80
     priority: 120
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'data-load-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'dataLoadApi'
     dockerImageUrl: 'etenlab/data-load-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -255,12 +281,14 @@ fargateApiServices:
     albPort: 3013
     dockerPort: 80
     priority: 130
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'oldb-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'oldbApi'
     dockerImageUrl: 'etenlab/oldb-api'
     healthCheckPath: '/'
     environment:
-      - PORT: 80
+      PORT: 80
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -273,12 +301,19 @@ fargateApiServices:
       KEYCLOAK_CLIENT_SECRET: keyloak-client-secret
       KEYCLOAK_ADMIN_CLIENT_ID: keycloak-admin-client-id
       KEYCLOAK_ADMIN_CLIENT_SECRET: keycloak-admin-client-secret
+      AIRTABLE_BASE_ID: airtable-base-id
+      AIRTABLE_API_KEY: airtable-api-key
+      AIRTABLE_TABLE_ID: airtable-table-id
+      AIRTABLE_TABLE_NAME: airtable-table-name
+      AIRTABLE_TOTAL_RECORDS: airtable-total-recorts
 
   GraphqlEngineStack:
     albPort: 3012
     dockerPort: 8080
     priority: 140
+    rootdomain: 'dev.lab.eten.bible'
     subdomain: 'graphql-engine'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'graphqlEngine'
     dockerImageUrl: 'hasura/graphql-engine:v2.13.2'
     healthCheckPath: '/console'
@@ -286,11 +321,11 @@ fargateApiServices:
       PG_DATABASE_URL: pg-database-url
       HASURA_GRAPHQL_METADATA_DATABASE_URL: hasura-graphql-metadata-database-url
     environment:
-      - HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
-      - HASURA_GRAPHQL_DEV_MODE: 'false'
-      - HASURA_GRAPHQL_ADMIN_SECRET: 'etenlabhasuraadminsecret'
-      - HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
-      - HASURA_GRAPHQL_ENABLED_LOG_TYPES: 'startup, http-log, webhook-log, websocket-log, query-log'
+      HASURA_GRAPHQL_ENABLE_CONSOLE: 'true'
+      HASURA_GRAPHQL_DEV_MODE: 'false'
+      HASURA_GRAPHQL_ADMIN_SECRET: 'etenlabhasuraadminsecret'
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: 'startup, http-log, webhook-log, websocket-log, query-log'
 
   # Requires creating a database manually and putting necessary secrets in ASM.
   # CREATE USER keycloak WITH ENCRYPTED PASSWORD 'KJHU9VrcK38GDGQu3BZHVNYqDqYkt22jP5Vkrd8q';
@@ -300,45 +335,82 @@ fargateApiServices:
     albPort: 3014
     dockerPort: 8080
     priority: 150
-    subdomain: 'kc'
+    rootdomain: 'dev.lab.eten.bible'
+    subdomain: 'keycloak'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
     serviceName: 'keycloak'
     dockerImageUrl: 'quay.io/keycloak/keycloak:latest'
     healthCheckPath: '/'
-    # TODO: need to specify run arguments: start-dev --features admin-fine-grained-authz
     secrets:
       KC_DB_USERNAME: keycloak-username
       KC_DB_PASSWORD: keycloak-password
       KC_DB_URL_DATABASE: keycloak-dbname
       KC_DB_URL_HOST: keycloak-host
+      KC_DB_SCHEMA: keycloak-schema
       KEYCLOAK_ADMIN: keycloak-admin-username
       KEYCLOAK_ADMIN_PASSWORD: keycloak-admin-password
     environment:
-      - KC_DB: 'postgres'
-      - KC_DB_SCHEMA: 'public'
+      # KC_DB: 'postgres'
+      # KC_HOSTNAME_ADMIN_URL: https://keycloak.dev.lab.eten.bible
+      KC_PROXY: edge
+    command:
+      - start-dev
+      - --features
+      - admin-fine-grained-authz
+
+  GraphApiStack:
+    albPort: 3015
+    dockerPort: 80
+    priority: 160
+    rootdomain: 'dev.lab.eten.bible'
+    subdomain: 'graph-api'
+    rootDomainCertSsm: '/dev/dev.lab.eten.bible/root-domain-certificate'
+    serviceName: 'graphApi'
+    dockerImageUrl: 'etenlab/graph-api'
+    healthCheckPath: '/'
+    environment:
+      DB_SYNCHRONIZE: 'false'
+      PORT: 80
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
 
 frontendServices:
   # Showcase is already configured as showcase.*
   ShowcaseAppStack: # configured
-    domainName: 'sc.dev.lab.eten.bible'
+    domainName: 'showcase.dev.lab.eten.bible'
+    appId: showcase-app
   GraphAppStack:
     domainName: 'graph.dev.lab.eten.bible'
+    appId: graph-app
   TranslationAppStack:
     domainName: translation.dev.lab.eten.bible
+    appId: translation-app
   LocaliseAppStack:
     domainName: localise.dev.lab.eten.bible
+    appId: localise-app
   CrowdBibleAppStack:
     domainName: crowdbible.dev.lab.eten.bible
+    appId: crowdbible-app
   OldbAppStack:
     domainName: oldb.dev.lab.eten.bible
+    appId: oldb-app
   AdminAppStack:
     domainName: admin.dev.lab.eten.bible
+    appId: admin-app
   EcosystemAppStack:
     domainName: ecosystem.dev.lab.eten.bible
+    appId: ecosystem-app
   # dev lab eten bible
   LandingAppStack:
     domainName: landing.dev.lab.eten.bible
-  # Storybook is already configured as storybook.*
+    appId: landing-app
   Storybook:
-    domainName: sb.dev.lab.eten.bible
+    domainName: storybook.dev.lab.eten.bible
+    appId: storybook-app
   DocsStack:
     domainName: docs.dev.lab.eten.bible
+    appId: docs-app

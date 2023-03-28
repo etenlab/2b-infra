@@ -7,6 +7,7 @@ export const importHostedZone = (
   hzId?: string,
 ): route53.IHostedZone => {
   const hostedZoneId = hzId || `${domainName}HZ`;
+
   return route53.HostedZone.fromLookup(scope, hostedZoneId, {
     domainName,
   });

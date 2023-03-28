@@ -11,7 +11,6 @@ const stackParams = {
   envName: 'qa',
   appPrefix: 'testApp',
   domainName: 'app.example.com',
-  rootDomainName: 'example.com',
 };
 
 describe('FrontendStack', () => {
@@ -129,6 +128,12 @@ describe('FrontendStack', () => {
             {
               ErrorCachingMinTTL: 10,
               ErrorCode: 404,
+              ResponseCode: 200,
+              ResponsePagePath: '/index.html',
+            },
+            {
+              ErrorCachingMinTTL: 10,
+              ErrorCode: 403,
               ResponseCode: 200,
               ResponsePagePath: '/index.html',
             },

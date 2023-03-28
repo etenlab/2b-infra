@@ -31,9 +31,6 @@ export interface ApiServiceStackProps extends cdk.StackProps {
   /** SSM param name storing VPC id */
   readonly vpcSsmParam: string;
 
-  /** SSM param name storing root domain certificate ARN */
-  readonly domainCertSsmParam: string;
-
   /** Registered root domain name */
   readonly rootDomainName: string;
 
@@ -242,5 +239,10 @@ export class ApiServiceStack extends cdk.Stack {
         ),
       },
     );
+
+    new cdk.CfnOutput(this, `${props.appPrefix}ApiUrl`, {
+      exportName: `${props.serviceName}-api-url`,
+      value: `https://${props.subdomain}.${props.rootDomainName}`,
+    });
   }
 }
