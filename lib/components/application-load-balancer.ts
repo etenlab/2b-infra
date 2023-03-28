@@ -15,8 +15,8 @@ export interface AppLoadBalancerProps {
   /** VPC to create ALB into */
   vpc: ec2.IVpc;
 
-  /** ACM certificate to associate with this ALB */
-  albCertSsmParam: string;
+  /** List of certificates to associate with this ALB */
+  certificateArns: string[];
 }
 
 /**
@@ -32,10 +32,7 @@ export class ApplicationLoadBalancer extends Construct {
   constructor(scope: Construct, id: string, props: AppLoadBalancerProps) {
     super(scope, id);
 
-    const listenerCertificate = importAlbCertificate(
-      this,
-      props.albCertSsmParam,
-    );
+    const certificates = props.certificateArns.map(importAlbCertificate)
 
     this.albSecurityGroup = new ec2.SecurityGroup(
       this,
@@ -64,7 +61,7 @@ export class ApplicationLoadBalancer extends Construct {
       port: 443,
       open: true,
       defaultAction: elbv2.ListenerAction.fixedResponse(404),
-      certificates: [listenerCertificate],
+      certificates: certificates,
     });
   }
 

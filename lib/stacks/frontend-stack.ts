@@ -24,8 +24,8 @@ export interface FrontendStackProps extends cdk.StackProps {
    */
   readonly domainName: string;
 
-  /** Registered root domain name */
-  readonly rootDomainName: string;
+  /** App ID used to mark AWS resources related to this app */
+  readonly appId: string;
 }
 
 /**
@@ -73,9 +73,12 @@ export class FrontendStack extends cdk.Stack {
     );
 
     /** Requests ACM certificate for Cloudfront distribution */
+    const [subdomain, ...rest] = props.domainName.split('.');
+    const rootdomain = rest.length > 2 ? rest.join('.') : props.domainName;
+
     const rootHostedZone = importHostedZone(
       this,
-      props.rootDomainName,
+      rootdomain,
       `${props.appPrefix}RootHz`,
     );
     const certificate = new acm.DnsValidatedCertificate(
@@ -165,6 +168,22 @@ export class FrontendStack extends cdk.Stack {
         new route53targets.CloudFrontTarget(cloudfrontDistribution),
       ),
       zone: rootHostedZone,
+    });
+
+    /** CFN outputs */
+    new cdk.CfnOutput(this, `${props.appPrefix}BucketName`, {
+      exportName: `${props.appId}-bucket-name`,
+      value: assetsBucket.bucketName,
+    });
+
+    new cdk.CfnOutput(this, `${props.appPrefix}CloudfrontId`, {
+      exportName: `${props.appId}-distribution-id`,
+      value: cloudfrontDistribution.distributionId,
+    });
+
+    new cdk.CfnOutput(this, `${props.appPrefix}DomainName`, {
+      exportName: `${props.appId}-domain-name`,
+      value: props.domainName,
     });
   }
 }

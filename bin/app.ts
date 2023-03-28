@@ -17,8 +17,6 @@ new CommonStack(app, `${config.environment}CommonStack`, {
     region: config.awsRegion,
   },
   appPrefix: config.appPrefix,
-  rootDomainName: config?.rootDomainName,
-  domainCertSsmParam: config.domainCertSsmParam,
   cidr: config.vpcCidr,
   envName: config.environment,
   natGatewaysCount: config.natGatewaysCount,
@@ -30,8 +28,8 @@ new CommonStack(app, `${config.environment}CommonStack`, {
   ecsClusterName: config.ecsClusterName,
   albSecurityGroupSsmParam: config.albSecurityGroupSsmParam,
   createEnvHostedZone: config.createEnvHostedZone,
-  envDomainName: config.envDomainName,
-  rootDomainCertArn: config.rootDomainCertArn,
+  envSubdomain: config.envSubdomain,
+  dns: config.dns
 });
 
 new DatabaseStack(app, `${config.environment}DatabaseStack`, {
@@ -75,8 +73,7 @@ Object.entries(config.fargateApiServices).forEach(([name, service]) => {
     ecsExecRoleSsmParam: config.defaultEcsExecRoleSsmParam,
     ecsTaskRoleSsmParam: config.defaultEcsTaskRoleSsmParam,
     ecsClusterName: config.ecsClusterName,
-    domainCertSsmParam: config.domainCertSsmParam,
-    rootDomainName: config.rootDomainName,
+    rootDomainName: service.rootdomain,
     subdomain: service.subdomain,
     dockerPort: service.dockerPort,
     dockerLabels: service.dockerLabels,
@@ -110,6 +107,6 @@ Object.entries(config.frontendServices).forEach(
       appPrefix: config.appPrefix,
       envName: config.environment,
       domainName: service.domainName,
-      rootDomainName: config.rootDomainName,
+      appId: service.appId,
     }),
 );

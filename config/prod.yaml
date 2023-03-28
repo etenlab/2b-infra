@@ -1,5 +1,5 @@
 # AWS env settings
-awsAccountId: '808019037620'
+awsAccountId: '605254017010'
 awsRegion: 'us-east-2'
 
 # Prefix used to identify app CloudFormation component
@@ -10,9 +10,7 @@ vpcCidr: '10.10.0.0/16'
 natGatewaysCount: 0
 
 # Env domain setup
-createEnvHostedZone: false # set to "true" if you want to create envDomainName, i.e."prod.crowd.bible"
-rootDomainName: 'crowd.bible'
-rootDomainCertArn: 'arn:aws:acm:us-east-1:808019037620:certificate/b21e5321-8f7d-4457-be47-f2a55bb20535' # required if createEnvHostedZone is "false"
+envSubdomain: 'prod'
 
 # App ECS cluster name
 ecsClusterName: 'prod-cluster'
@@ -23,8 +21,8 @@ defaultEcsExecRoleSsmParam: '/prod/ecs-default-execution-role'
 defaultEcsTaskRoleSsmParam: '/prod/ecs-default-task-role'
 albArnSsmParam: '/prod/alb-arn'
 albSecurityGroupSsmParam: '/prod/alb-sg-id'
+albListenerSsmParam: '/prod/alb-listener-arn'
 dbSecurityGroupSsmParam: '/prod/db-sg-id'
-domainCertSsmParam: '/prod/root-domain-certificate'
 
 # Secrets Manager params to create
 dbCredentialSecret: 'prod/db/credentials'
@@ -32,36 +30,123 @@ dbCredentialSecret: 'prod/db/credentials'
 # Whether database is accessible outside of VPC
 dbPublicAccess: false
 
-# Config for frontend showcase app
-showcaseApp:
-  domainName: 'showcase.crowd.bible'
+# DNS setup
+dns:
+  - existingRootHostedZone:  'crowd.bible'
+    createEnvHostedZone: false
+    rootDomainCertSsmParam: '/prod/crowd.bible/root-domain-certificate'
+    envDomainCertSsmParam: '/prod/crowd.bible/env-domain-certificate'
+  - existingRootHostedZone:  'openlanguages.io'
+    createEnvHostedZone: false
+    rootDomainCertSsmParam: '/prod/openlanguages.io/root-domain-certificate'
+    envDomainCertSsmParam: '/prod/openlanguages.io/env-domain-certificate'
 
-# Config for database API app
-databaseApi:
-  dockerPort: 8101
-  albPort: 3001
-  subdomain: 'db'
-  serviceName: 'databaseApi'
-  dockerImageUrl: 'etenlab/database-api'
-  cpu: 512
-  memory: 1024
-  taskCount: 1
-  priority: 10
-  environment:
-    - PORT: 8101
-    - RUN_MIGRATIONS: false
+fargateApiServices:
+  DatabaseApiStack:
+    albPort: 3001
+    dockerPort: 8101
+    priority: 10
+    rootdomain: 'crowd.bible'
+    subdomain: 'db-api'
+    serviceName: 'databaseApi'
+    dockerImageUrl: 'etenlab/database-api'
+    healthCheckPath: '/'
+    environment:
+      PORT: 8101
+      RUN_MIGRATIONS: false
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+      KEYCLOAK_URL: keycloak-url
+      KEYCLOAK_REALM: keycloak-realm
+      KEYCLOAK_CLIENTS: keycloak-clients
+      CORS_ALLOW_ORIGINS: database-api-cors-allow-origins
 
-# Config for admin API app
-adminApi:
-  dockerPort: 8101
-  albPort: 3002
-  subdomain: 'admin'
-  serviceName: 'adminApi'
-  dockerImageUrl: 'etenlab/admin-api'
-  cpu: 512
-  memory: 1024
-  taskCount: 2
-  priority: 20
-  environment:
-    - PORT: 8101
-    - RUN_MIGRATIONS: false
+  OLDBApiStack:
+    albPort: 3002
+    dockerPort: 80
+    priority: 20
+    rootdomain: 'openlanguages.io'
+    subdomain: 'api'
+    serviceName: 'oldbApi'
+    dockerImageUrl: 'etenlab/oldb-api'
+    healthCheckPath: '/'
+    environment:
+      PORT: 80
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+      KEYCLOAK_URL: keycloak-url
+      KEYCLOAK_CLIENT_ID: keycloak-client-id
+      KEYCLOAK_REALM: keycloak-realm
+      KEYCLOAK_CLIENT_SECRET: keyloak-client-secret
+      KEYCLOAK_ADMIN_CLIENT_ID: keycloak-admin-client-id
+      KEYCLOAK_ADMIN_CLIENT_SECRET: keycloak-admin-client-secret
+      AIRTABLE_BASE_ID: airtable-base-id
+      AIRTABLE_API_KEY: airtable-api-key
+      AIRTABLE_TABLE_ID: airtable-table-id
+      AIRTABLE_TABLE_NAME: airtable-table-name
+      AIRTABLE_TOTAL_RECORDS: airtable-total-records
+
+  CPGServerStack:
+    albPort: 3003
+    dockerPort: 80
+    priority: 30
+    rootdomain: 'crowd.bible'
+    subdomain: 'api'
+    serviceName: 'cpgServer'
+    dockerImageUrl: 'etenlab/cpg-server'
+    healthCheckPath: '/'
+    environment:
+      PORT: 80
+      CORS_ALLOW_ORIGINS: '*'
+    secrets:
+      DB_HOST: host
+      DB_PORT: port
+      DB_USERNAME: username
+      DB_PASSWORD: password
+      DB_NAME: dbname
+
+  # Requires creating a database manually and putting necessary secrets in ASM.
+  # CREATE USER keycloak WITH ENCRYPTED PASSWORD 'KJHU9VrcK38GDGQu3BZHVNYqDqYkt22jP5Vkrd8q';
+  # CREATE DATABASE keycloak_db;
+  # GRANT ALL PRIVILEGES ON DATABASE keycloak_db TO keycloak;
+  KeyCloakStack:
+    albPort: 3004
+    dockerPort: 8080
+    priority: 40
+    rootdomain: 'crowd.bible'
+    subdomain: 'keycloak'
+    serviceName: 'keycloak'
+    dockerImageUrl: 'quay.io/keycloak/keycloak:latest'
+    healthCheckPath: '/'
+    cpu: 2048
+    memory: 4096
+    secrets:
+      KC_DB_USERNAME: keycloak-username
+      KC_DB_PASSWORD: keycloak-password
+      KC_DB_URL_DATABASE: keycloak-dbname
+      KC_DB_URL_HOST: keycloak-host
+      KC_DB_SCHEMA: keycloak-schema
+      KEYCLOAK_ADMIN: keycloak-admin-username
+      KEYCLOAK_ADMIN_PASSWORD: keycloak-admin-password
+    environment:
+      KC_PROXY: edge
+    command:
+      - start-dev
+      - --features
+      - admin-fine-grained-authz
+
+frontendServices:
+  OldbAppStack:
+    appId: oldb-app
+    domainName: openlanguages.io
+  CrowdBibleAppStack:
+    appId: crowdbible
+    domainName: crowd.bible
