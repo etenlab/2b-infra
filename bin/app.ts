@@ -106,6 +106,7 @@ Object.entries(config.frontendServices).forEach(
       },
       appPrefix: config.appPrefix,
       envName: config.environment,
-      domainName: service.domainName
+      domainName: service.domainName,
+      appId: service.appId,
     }),
 );

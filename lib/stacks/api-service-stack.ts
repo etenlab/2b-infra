@@ -239,5 +239,10 @@ export class ApiServiceStack extends cdk.Stack {
         ),
       },
     );
+
+    new cdk.CfnOutput(this, `${props.appPrefix}ApiUrl`, {
+      exportName: `${props.serviceName}-api-url`,
+      value: `https://${props.subdomain}.${props.rootDomainName}`,
+    });
   }
 }

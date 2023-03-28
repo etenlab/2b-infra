@@ -44,6 +44,7 @@ export interface FargateServiceConfig {
 
 export interface FrontendAppConfig {
   domainName: string;
+  appId: string;
 }
 
 export interface DNSConfig {

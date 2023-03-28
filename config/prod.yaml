@@ -145,6 +145,8 @@ fargateApiServices:
 
 frontendServices:
   OldbAppStack:
+    appId: oldb-app
     domainName: openlanguages.io
   CrowdBibleAppStack:
+    appId: crowdbible
     domainName: crowd.bible

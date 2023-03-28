@@ -382,24 +382,35 @@ frontendServices:
   # Showcase is already configured as showcase.*
   ShowcaseAppStack: # configured
     domainName: 'showcase.dev.lab.eten.bible'
+    appId: showcase-app
   GraphAppStack:
     domainName: 'graph.dev.lab.eten.bible'
+    appId: graph-app
   TranslationAppStack:
     domainName: translation.dev.lab.eten.bible
+    appId: translation-app
   LocaliseAppStack:
     domainName: localise.dev.lab.eten.bible
+    appId: localise-app
   CrowdBibleAppStack:
     domainName: crowdbible.dev.lab.eten.bible
+    appId: crowdbible-app
   OldbAppStack:
     domainName: oldb.dev.lab.eten.bible
+    appId: oldb-app
   AdminAppStack:
     domainName: admin.dev.lab.eten.bible
+    appId: admin-app
   EcosystemAppStack:
     domainName: ecosystem.dev.lab.eten.bible
+    appId: ecosystem-app
   # dev lab eten bible
   LandingAppStack:
     domainName: landing.dev.lab.eten.bible
+    appId: landing-app
   Storybook:
     domainName: storybook.dev.lab.eten.bible
+    appId: storybook-app
   DocsStack:
     domainName: docs.dev.lab.eten.bible
+    appId: docs-app
