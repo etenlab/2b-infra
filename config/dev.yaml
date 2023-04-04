@@ -15,6 +15,9 @@ envSubdomain: 'dev'
 # App ECS cluster name
 ecsClusterName: 'dev-cluster'
 
+# S3 bucket names
+publicFilesBucketName: 'eil-public-files-dev'
+
 # System Manager params to create
 vpcSsmParam: '/dev/app-vpc-id'
 defaultEcsExecRoleSsmParam: '/dev/ecs-default-execution-role'

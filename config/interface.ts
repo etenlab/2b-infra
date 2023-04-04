@@ -8,6 +8,7 @@ export interface EnvConfig {
   natGatewaysCount: number;
   envSubdomain: string;
   ecsClusterName: string;
+  publicFilesBucketName: string;
   vpcSsmParam: string;
   defaultEcsExecRoleSsmParam: string;
   defaultEcsTaskRoleSsmParam: string;

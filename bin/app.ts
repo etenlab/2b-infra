@@ -43,6 +43,7 @@ new DatabaseStack(app, `${config.environment}DatabaseStack`, {
   isPubliclyAccessible: config.dbPublicAccess,
   dbCredentialSecret: config.dbCredentialSecret,
   dbSecurityGroupSsmParam: config.dbSecurityGroupSsmParam,
+  publicFilesBucketName: config.publicFilesBucketName,
 });
 
 Object.entries(config.fargateApiServices).forEach(([name, service]) => {
