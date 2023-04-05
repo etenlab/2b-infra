@@ -27,7 +27,6 @@ new CommonStack(app, `${config.environment}CommonStack`, {
   ecsTaskRoleSsmParam: config.defaultEcsTaskRoleSsmParam,
   ecsClusterName: config.ecsClusterName,
   albSecurityGroupSsmParam: config.albSecurityGroupSsmParam,
-  createEnvHostedZone: config.createEnvHostedZone,
   envSubdomain: config.envSubdomain,
   dns: config.dns
 });

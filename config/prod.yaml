@@ -36,13 +36,9 @@ dbPublicAccess: false
 # DNS setup
 dns:
   - existingRootHostedZone:  'crowd.bible'
-    createEnvHostedZone: false
     rootDomainCertSsmParam: '/prod/crowd.bible/root-domain-certificate'
-    envDomainCertSsmParam: '/prod/crowd.bible/env-domain-certificate'
   - existingRootHostedZone:  'openlanguages.io'
-    createEnvHostedZone: false
     rootDomainCertSsmParam: '/prod/openlanguages.io/root-domain-certificate'
-    envDomainCertSsmParam: '/prod/openlanguages.io/env-domain-certificate'
 
 fargateApiServices:
   DatabaseApiStack:

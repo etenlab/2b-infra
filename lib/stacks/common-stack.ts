@@ -15,9 +15,7 @@ import { importHostedZone } from '../helpers';
 
 interface DNSConfig {
   existingRootHostedZone: string;
-  createEnvHostedZone: Boolean;
   rootDomainCertSsmParam: string;
-  envDomainCertSsmParam: string;
 }
 
 /**
@@ -56,9 +54,6 @@ export interface CommonStackProps extends cdk.StackProps {
 
   /** Number of nat gateways to create */
   readonly natGatewaysCount: number;
-
-  /** Whether to create a separate hosted zone for deployed environment */
-  readonly createEnvHostedZone?: boolean;
 
   /** Subdomain name for deployed environment.*/
   readonly envSubdomain: string;
@@ -129,17 +124,14 @@ export class CommonStack extends cdk.Stack {
      * Create Route53 hosted zones.
      * Note that root hosted zone must already exist in the deployed environment.
      */
-    const albCertificates = new Set<string>()
+    const albCertificates = new Set<string>();
     props.dns.forEach((dnsConfig) => {
       const {
         existingRootHostedZone: rootHzName,
-        createEnvHostedZone,
-        rootDomainCertSsmParam,
-        envDomainCertSsmParam,
+        rootDomainCertSsmParam
       } = dnsConfig;
 
       const rootHzPrefix = `${props.appPrefix}${rootHzName}`;
-      const envHzPrefix = `${props.appPrefix}${props.envSubdomain}${rootHzName}`;
 
       const rootHostedZone = importHostedZone(
         this,
@@ -162,56 +154,14 @@ export class CommonStack extends cdk.Stack {
         description: `Certificate arn for ${rootHzName}`,
         parameterName: rootDomainCertSsmParam,
       });
-      albCertificates.add(rootHzCertificate.certificateArn)
-
-
-      if (createEnvHostedZone) {
-        const envDomainName = `${props.envSubdomain}.${rootHzName}`
-        const envHostedZone = new route53.PublicHostedZone(
-          this,
-          `${envHzPrefix}PublicHz`,
-          {
-            zoneName: envDomainName,
-            comment: `Public hosted zone for ${envHzPrefix}`,
-          },
-        );
-
-        /**
-         * Add NS records to the existing root hosted zone
-         * to enable DNS validation for env certificate.
-         */
-        const rootZoneNsRecord = new route53.NsRecord(
-          this,
-          `${envHzPrefix}RootNSRecord`,
-          {
-            zone: rootHostedZone,
-            recordName: envDomainName,
-            values: envHostedZone.hostedZoneNameServers || [],
-            ttl: cdk.Duration.minutes(30),
-          },
-        );
-
-        const certificate = new acm.Certificate(this, `${envHzPrefix}Cert`, {
-          domainName: envDomainName,
-          subjectAlternativeNames: [`*.${envDomainName}`],
-          validation: acm.CertificateValidation.fromDns(envHostedZone),
-        });
-
-        new ssm.StringParameter(this, `${envHzPrefix}CertSsmParam`, {
-          stringValue: certificate.certificateArn,
-          description: `Certificate arn for ${envHzPrefix}`,
-          parameterName: envDomainCertSsmParam,
-        });
-
-        albCertificates.add(certificate.certificateArn)
-      }
+      albCertificates.add(rootHzCertificate.certificateArn);
     });
 
     /** Load balancer */
     const alb = new ApplicationLoadBalancer(this, `${props.appPrefix}Alb`, {
       loadBalancerName: `${props.envName}-alb`,
       vpc: vpc.getVpc(),
-      certificateArns: [...albCertificates]
+      certificateArns: [...albCertificates],
     });
 
     new ssm.StringParameter(this, `${props.appPrefix}AlbSsmParam`, {

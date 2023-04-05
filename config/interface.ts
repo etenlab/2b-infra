@@ -4,7 +4,6 @@ export interface EnvConfig {
   environment: string;
   appPrefix: string;
   vpcCidr: string;
-  createEnvHostedZone: boolean;
   natGatewaysCount: number;
   envSubdomain: string;
   ecsClusterName: string;
@@ -50,7 +49,5 @@ export interface FrontendAppConfig {
 
 export interface DNSConfig {
   existingRootHostedZone: string;
-  createEnvHostedZone: Boolean;
   rootDomainCertSsmParam: string;
-  envDomainCertSsmParam: string;
 }

@@ -21,14 +21,11 @@ const stackParams = {
   domainCertSsmParam: 'domain-cert-ssm',
   natGatewaysCount: 0,
   appPrefix: 'qa',
-  createEnvHostedZone: false,
   rootDomainCertArn: 'arn:aws:acm:us-east-2:111111111:certificate/000000000',
   dns: [
     {
       existingRootHostedZone: 'example.com',
-      createEnvHostedZone: false,
       rootDomainCertSsmParam: '/test/example.com/root-domain-certificate',
-      envDomainCertSsmParam: '/test/example.com/env-domain-certificate',
     },
   ],
 };
@@ -64,50 +61,5 @@ describe('CommonStack', () => {
     template.resourceCountIs('AWS::ECS::Cluster', 1);
     template.resourceCountIs('AWS::IAM::Role', 2);
     template.resourceCountIs('AWS::IAM::Policy', 2);
-  });
-
-  test('Creates new hosted zone for environment if specified', () => {
-    const params = {
-      ...stackParams,
-      dns: [
-        {
-          existingRootHostedZone: 'example.com',
-          createEnvHostedZone: true,
-          rootDomainCertSsmParam: '/test/example.com/root-domain-certificate',
-          envDomainCertSsmParam: '/test/example.com/env-domain-certificate',
-        },
-      ],
-    };
-
-    const app = new cdk.App();
-
-    const commonStack = new CommonStack(app, 'CommonStack', params);
-
-    const template = Template.fromStack(commonStack);
-
-    template.hasResourceProperties(
-      'AWS::Route53::HostedZone',
-      Match.objectLike({
-        Name: 'test.example.com.',
-      }),
-    );
-
-    template.hasResourceProperties(
-      'AWS::Route53::RecordSet',
-      Match.objectLike({
-        Name: 'test.example.com.',
-        Type: 'NS',
-        TTL: '1800',
-      }),
-    );
-
-    template.hasResourceProperties(
-      'AWS::CertificateManager::Certificate',
-      Match.objectLike({
-        DomainName: 'test.example.com',
-        SubjectAlternativeNames: ['*.test.example.com'],
-        ValidationMethod: 'DNS',
-      }),
-    );
   });
 });
