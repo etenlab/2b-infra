@@ -26,6 +26,9 @@ export interface FrontendStackProps extends cdk.StackProps {
 
   /** App ID used to mark AWS resources related to this app */
   readonly appId: string;
+
+  /** Whether Cloudfront is accessible */
+  readonly enabled: boolean;
 }
 
 /**
@@ -144,6 +147,7 @@ export class FrontendStack extends cdk.Stack {
           cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
           compress: true,
         },
+        enabled: props.enabled,
         errorResponses: [
           {
             httpStatus: 404,

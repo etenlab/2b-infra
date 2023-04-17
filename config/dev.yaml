@@ -39,6 +39,8 @@ dns:
     rootDomainCertSsmParam: '/dev/dev.crowd.bible/root-domain-certificate'
   - existingRootHostedZone: 'dev.openlanguages.io'
     rootDomainCertSsmParam: '/dev/dev.openlanguages.io/root-domain-certificate'
+  - existingRootHostedZone: 'dev.lab.eten.bible'
+    rootDomainCertSsmParam: '/dev/dev.lab.eten.bible/root-domain-certificate'
 
 fargateApiServices:
   DatabaseApiStack:
@@ -104,9 +106,12 @@ fargateApiServices:
     healthCheckPath: '/'
     environment:
       PORT: 80
-      CORS_ALLOW_ORIGINS: '*'
+      CORS_ALLOW_ORIGINS: ''
       MAX_FILE_SIZE: 1073741824 # 1024 * 1024 * 1024
       MAX_FILES: 10
+      FRONTEND_URL: https://dev.crowd.bible
+      FROM_EMAIL_ADDRESS: aslambabu@gmail.com
+    # TODO: create a secret per app rather than one shared across all apps
     secrets:
       DB_HOST: host
       DB_PORT: port
@@ -117,6 +122,13 @@ fargateApiServices:
       AWS_S3_BUCKET_NAME: aws-s3-bucket-name
       AWS_S3_ACCESS_ID: aws-s3-access-id
       AWS_S3_SECRET_KEY: aws-s3-secret-key
+      KEYCLOAK_URL: keycloak-url
+      KEYCLOAK_REALM: keycloak-realm
+      KEYCLOAK_CLIENT_ID: keycloak-client-id
+      KEYCLOAK_CLIENT_SECRET: keyloak-client-secret-cpg
+      JWT_KEY: jwt-key-cpg
+      AWS_ACCESS_KEY_ID: aws-key-id-cpg
+      AWS_SECRET_ACCESS_KEY: aws-secret-key-cpg
 
   # Requires creating a database manually and putting necessary secrets in ASM.
   # CREATE USER keycloak WITH ENCRYPTED PASSWORD 'KJHU9VrcK38GDGQu3BZHVNYqDqYkt22jP5Vkrd8q';
@@ -152,6 +164,16 @@ frontendServices:
   OldbAppStack:
     appId: oldb-app
     domainName: dev.openlanguages.io
+    enabled: true
   CrowdBibleAppStack:
     appId: crowdbible
     domainName: dev.crowd.bible
+    enabled: true
+  DocsStack:
+    domainName: docs.dev.lab.eten.bible
+    appId: docs-app
+    enabled: true
+  StorybookStack:
+    domainName: storybook.dev.lab.eten.bible
+    appId: storybook-app
+    enabled: true

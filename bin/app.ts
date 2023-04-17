@@ -108,5 +108,6 @@ Object.entries(config.frontendServices).forEach(
       envName: config.environment,
       domainName: service.domainName,
       appId: service.appId,
+      enabled: service.enabled
     }),
 );

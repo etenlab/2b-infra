@@ -104,7 +104,7 @@ fargateApiServices:
     healthCheckPath: '/'
     environment:
       PORT: 80
-      CORS_ALLOW_ORIGINS: '*'
+      CORS_ALLOW_ORIGINS: ''
       MAX_FILE_SIZE: 1073741824 # 1024 * 1024 * 1024
       MAX_FILES: 10
     secrets:
@@ -153,6 +153,8 @@ frontendServices:
   OldbAppStack:
     appId: oldb-app
     domainName: openlanguages.io
+    enabled: true
   CrowdBibleAppStack:
     appId: crowdbible
     domainName: crowd.bible
+    enabled: false
