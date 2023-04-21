@@ -44,6 +44,7 @@ dns:
 
 fargateApiServices:
   DatabaseApiStack:
+    projectTag: 'Common'
     albPort: 3001
     dockerPort: 8101
     priority: 10
@@ -67,6 +68,7 @@ fargateApiServices:
       CORS_ALLOW_ORIGINS: database-api-cors-allow-origins
 
   OLDBApiStack:
+    projectTag: 'Resources'
     albPort: 3002
     dockerPort: 80
     priority: 20
@@ -96,6 +98,7 @@ fargateApiServices:
       AIRTABLE_TOTAL_RECORDS: airtable-total-recorts
 
   CPGServerStack:
+    projectTag: 'Crowd'
     albPort: 3003
     dockerPort: 80
     priority: 30
@@ -135,6 +138,7 @@ fargateApiServices:
   # CREATE DATABASE keycloak_db;
   # GRANT ALL PRIVILEGES ON DATABASE keycloak_db TO keycloak;
   KeycloakStack:
+    projectTag: 'Common'
     albPort: 3004
     dockerPort: 8080
     priority: 40
@@ -162,18 +166,22 @@ fargateApiServices:
 
 frontendServices:
   OldbAppStack:
+    projectTag: 'Resources'
     appId: oldb-app
     domainName: dev.openlanguages.io
     enabled: true
   CrowdBibleAppStack:
+    projectTag: 'Crowd'
     appId: crowdbible
     domainName: dev.crowd.bible
     enabled: true
   DocsStack:
+    projectTag: 'Common'
     domainName: docs.dev.lab.eten.bible
     appId: docs-app
     enabled: true
   StorybookStack:
+    projectTag: 'Common'
     domainName: storybook.dev.lab.eten.bible
     appId: storybook-app
     enabled: true

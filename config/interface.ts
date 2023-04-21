@@ -40,12 +40,14 @@ export interface FargateServiceConfig {
   priority: number;
   dockerLabels?: { [key: string]: string };
   command?: string[];
+  projectTag: string;
 }
 
 export interface FrontendAppConfig {
   domainName: string;
   appId: string;
   enabled: boolean;
+  projectTag: string;
 }
 
 export interface DNSConfig {
