@@ -4,10 +4,10 @@ export interface EnvConfig {
   environment: string;
   appPrefix: string;
   vpcCidr: string;
-  createEnvHostedZone: boolean;
   natGatewaysCount: number;
   envSubdomain: string;
   ecsClusterName: string;
+  publicFilesBucketName: string;
   vpcSsmParam: string;
   defaultEcsExecRoleSsmParam: string;
   defaultEcsTaskRoleSsmParam: string;
@@ -40,16 +40,18 @@ export interface FargateServiceConfig {
   priority: number;
   dockerLabels?: { [key: string]: string };
   command?: string[];
+  projectTag: string;
 }
 
 export interface FrontendAppConfig {
   domainName: string;
   appId: string;
+  enabled: boolean;
+  projectTag: string;
+  createCustomDomain: boolean;
 }
 
 export interface DNSConfig {
   existingRootHostedZone: string;
-  createEnvHostedZone: Boolean;
   rootDomainCertSsmParam: string;
-  envDomainCertSsmParam: string;
 }

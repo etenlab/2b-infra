@@ -1,14 +1,8 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as route53 from 'aws-cdk-lib/aws-route53';
-import * as acm from 'aws-cdk-lib/aws-certificatemanager';
-import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
-import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
 
-import { importHostedZone } from '../helpers';
+import { FrontendCloudfront } from '../components';
 
 /** Properties required to create infrastructure for frontend app */
 export interface FrontendStackProps extends cdk.StackProps {
@@ -26,6 +20,11 @@ export interface FrontendStackProps extends cdk.StackProps {
 
   /** App ID used to mark AWS resources related to this app */
   readonly appId: string;
+
+  /** Whether Cloudfront is accessible */
+  readonly enabled: boolean;
+
+  readonly createCustomDomain: boolean;
 }
 
 /**
@@ -55,122 +54,20 @@ export class FrontendStack extends cdk.Stack {
       },
     );
 
-    /** Restricts bucket access to CloudFront user only */
-    const cloudfrontOriginAccessIdentity = new cloudfront.OriginAccessIdentity(
+    /** Cloudfront distribution */
+    const cloudfrontDistribution = new FrontendCloudfront(
       this,
-      `${props.appPrefix}CloudFrontOAI`,
-    );
-    assetsBucket.addToResourcePolicy(
-      new iam.PolicyStatement({
-        actions: ['s3:GetObject'],
-        resources: [assetsBucket.arnForObjects('*')],
-        principals: [
-          new iam.CanonicalUserPrincipal(
-            cloudfrontOriginAccessIdentity.cloudFrontOriginAccessIdentityS3CanonicalUserId,
-          ),
-        ],
-      }),
-    );
-
-    /** Requests ACM certificate for Cloudfront distribution */
-    const [subdomain, ...rest] = props.domainName.split('.');
-    const rootdomain = rest.length > 2 ? rest.join('.') : props.domainName;
-
-    const rootHostedZone = importHostedZone(
-      this,
-      rootdomain,
-      `${props.appPrefix}RootHz`,
-    );
-    const certificate = new acm.DnsValidatedCertificate(
-      this,
-      `${props.appPrefix}WebsiteCertificate`,
+      `${props.appPrefix}Cfn`,
       {
+        appPrefix: props.appPrefix,
+        bucket: assetsBucket,
         domainName: props.domainName,
-        hostedZone: rootHostedZone,
-        region: 'us-east-1',
+        enabled: props.enabled,
+        createCustomDomain: props.createCustomDomain,
       },
-    );
+    ).getDistribution();
 
-    /** Configures security headers for Cloudfront responses */
-    const responseHeaderPolicy = new cloudfront.ResponseHeadersPolicy(
-      this,
-      `${props.appPrefix}ResponseHeaderPolicy`,
-      {
-        comment: 'Security headers response header policy',
-        securityHeadersBehavior: {
-          strictTransportSecurity: {
-            override: true,
-            accessControlMaxAge: cdk.Duration.days(2 * 365),
-            includeSubdomains: true,
-            preload: true,
-          },
-          contentTypeOptions: {
-            override: true,
-          },
-          referrerPolicy: {
-            override: true,
-            referrerPolicy:
-              cloudfront.HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN,
-          },
-          xssProtection: {
-            override: true,
-            protection: true,
-            modeBlock: true,
-          },
-          frameOptions: {
-            override: true,
-            frameOption: cloudfront.HeadersFrameOption.DENY,
-          },
-        },
-      },
-    );
-
-    /** Creates Cloudfront distribution */
-    const cloudfrontDistribution = new cloudfront.Distribution(
-      this,
-      `${props.appPrefix}CloudFrontDistribution`,
-      {
-        certificate,
-        domainNames: [props.domainName],
-        defaultRootObject: 'index.html',
-        defaultBehavior: {
-          origin: new origins.S3Origin(assetsBucket, {
-            originAccessIdentity: cloudfrontOriginAccessIdentity,
-          }),
-          viewerProtocolPolicy:
-            cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-          responseHeadersPolicy: responseHeaderPolicy,
-          allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
-          cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-          compress: true,
-        },
-        errorResponses: [
-          {
-            httpStatus: 404,
-            responseHttpStatus: 200,
-            responsePagePath: '/index.html',
-            ttl: cdk.Duration.seconds(10),
-          },
-          {
-            httpStatus: 403,
-            responseHttpStatus: 200,
-            responsePagePath: '/index.html',
-            ttl: cdk.Duration.seconds(10),
-          },
-        ],
-      },
-    );
-
-    /** Creates Route53 record for Cloudfront distribution */
-    new route53.ARecord(this, `${props.appPrefix}CloudfrontARecord`, {
-      recordName: props.domainName,
-      target: route53.RecordTarget.fromAlias(
-        new route53targets.CloudFrontTarget(cloudfrontDistribution),
-      ),
-      zone: rootHostedZone,
-    });
-
-    /** CFN outputs */
+    /** Cloudformation outputs */
     new cdk.CfnOutput(this, `${props.appPrefix}BucketName`, {
       exportName: `${props.appId}-bucket-name`,
       value: assetsBucket.bucketName,

@@ -10,6 +10,7 @@ route53.HostedZone.fromLookup = Route53Mock.fromLookup;
 const stackParams = {
   envName: 'qa',
   appPrefix: 'testApp',
+  appId: 'testapp',
   domainName: 'app.example.com',
 };
 

@@ -13,6 +13,7 @@ const stackParams = {
   isPubliclyAccessible: true,
   dbCredentialSecret: 'db-credential-secret',
   dbSecurityGroupSsmParam: 'db-sg-ssm',
+  publicFilesBucketName: 'test-files-bucket',
 };
 
 ec2.Vpc.fromLookup = VpcMock.fromLookup;

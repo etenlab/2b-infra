@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import { importVpc } from '../helpers';
 
 /**
@@ -26,6 +27,9 @@ export interface DatabaseStackProps extends cdk.StackProps {
 
   /** SSM param name to store database security group id */
   readonly dbSecurityGroupSsmParam: string;
+
+  /** Bucket name for storing public files */
+  readonly publicFilesBucketName: string;
 }
 
 /**
@@ -116,5 +120,19 @@ export class DatabaseStack extends cdk.Stack {
       description: 'Database security group',
       parameterName: props.dbSecurityGroupSsmParam,
     });
+
+    /** Create public S3 bucket for files */
+    const publicFilesBucket = new s3.Bucket(
+      this,
+      `${props.appPrefix}FilesBucket`,
+      {
+        bucketName: props.publicFilesBucketName,
+        publicReadAccess: true,
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+        accessControl: s3.BucketAccessControl.PUBLIC_READ,
+        objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
+        encryption: s3.BucketEncryption.S3_MANAGED,
+      },
+    );
   }
 }
