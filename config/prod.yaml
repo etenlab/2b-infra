@@ -35,10 +35,12 @@ dbPublicAccess: false
 
 # DNS setup
 dns:
-  - existingRootHostedZone:  'crowd.bible'
+  - existingRootHostedZone: 'crowd.bible'
     rootDomainCertSsmParam: '/prod/crowd.bible/root-domain-certificate'
-  - existingRootHostedZone:  'openlanguages.io'
+  - existingRootHostedZone: 'openlanguages.io'
     rootDomainCertSsmParam: '/prod/openlanguages.io/root-domain-certificate'
+  - existingRootHostedZone: 'schema.bible'
+    rootDomainCertSsmParam: '/prod/schema.bible/root-domain-certificate'
 
 fargateApiServices:
   DatabaseApiStack:
@@ -121,7 +123,6 @@ fargateApiServices:
       AWS_S3_ACCESS_ID: aws-s3-access-id
       AWS_S3_SECRET_KEY: aws-s3-secret-key
 
-
   # Requires creating a database manually and putting necessary secrets in ASM.
   # CREATE USER keycloak WITH ENCRYPTED PASSWORD 'KJHU9VrcK38GDGQu3BZHVNYqDqYkt22jP5Vkrd8q';
   # CREATE DATABASE keycloak_db;
@@ -159,8 +160,16 @@ frontendServices:
     appId: oldb-app
     domainName: openlanguages.io
     enabled: true
+    createCustomDomain: true
   CrowdBibleAppStack:
     projectTag: 'Crowd'
     appId: crowdbible
     domainName: crowd.bible
     enabled: false
+    createCustomDomain: true
+  SchemaStack:
+    projectTag: 'Common'
+    domainName: schema.bible
+    appId: schema-app
+    enabled: true
+    createCustomDomain: false

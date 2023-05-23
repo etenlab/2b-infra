@@ -48,6 +48,7 @@ export interface FrontendAppConfig {
   appId: string;
   enabled: boolean;
   projectTag: string;
+  createCustomDomain: boolean;
 }
 
 export interface DNSConfig {

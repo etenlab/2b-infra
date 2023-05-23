@@ -41,6 +41,8 @@ dns:
     rootDomainCertSsmParam: '/dev/dev.openlanguages.io/root-domain-certificate'
   - existingRootHostedZone: 'dev.lab.eten.bible'
     rootDomainCertSsmParam: '/dev/dev.lab.eten.bible/root-domain-certificate'
+  - existingRootHostedZone: 'dev.schema.bible'
+    rootDomainCertSsmParam: '/dev/dev.schema.bible/root-domain-certificate'
 
 fargateApiServices:
   DatabaseApiStack:
@@ -170,18 +172,28 @@ frontendServices:
     appId: oldb-app
     domainName: dev.openlanguages.io
     enabled: true
+    createCustomDomain: true
   CrowdBibleAppStack:
     projectTag: 'Crowd'
     appId: crowdbible
     domainName: dev.crowd.bible
     enabled: true
+    createCustomDomain: true
   DocsStack:
     projectTag: 'Common'
     domainName: docs.dev.lab.eten.bible
     appId: docs-app
     enabled: true
+    createCustomDomain: true
   StorybookStack:
     projectTag: 'Common'
     domainName: storybook.dev.lab.eten.bible
     appId: storybook-app
     enabled: true
+    createCustomDomain: true
+  SchemaStack:
+    projectTag: 'Common'
+    domainName: dev.schema.bible
+    appId: schema-app
+    enabled: true
+    createCustomDomain: false
