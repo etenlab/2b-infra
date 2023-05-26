@@ -172,4 +172,4 @@ frontendServices:
     domainName: schema.bible
     appId: schema-app
     enabled: true
-    createCustomDomain: false
+    createCustomDomain: true
