@@ -1,17 +1,19 @@
 import * as cdk from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import * as route53 from 'aws-cdk-lib/aws-route53';
-import { FrontendStack } from '../../lib/stacks/frontend-stack';
+import { FrontendStack, FrontendStackProps } from '../../lib/stacks/frontend-stack';
 
 import * as Route53Mock from '../mocks/route53-mock';
 
 route53.HostedZone.fromLookup = Route53Mock.fromLookup;
 
-const stackParams = {
+const stackParams: FrontendStackProps = {
   envName: 'qa',
   appPrefix: 'testApp',
   appId: 'testapp',
   domainName: 'app.example.com',
+  enabled: false,
+  createCustomDomain: false
 };
 
 describe('FrontendStack', () => {
