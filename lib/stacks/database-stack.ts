@@ -129,9 +129,15 @@ export class DatabaseStack extends cdk.Stack {
         bucketName: props.publicFilesBucketName,
         publicReadAccess: true,
         removalPolicy: cdk.RemovalPolicy.RETAIN,
-        accessControl: s3.BucketAccessControl.PUBLIC_READ,
+        // accessControl: s3.BucketAccessControl.PUBLIC_READ,
         objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
         encryption: s3.BucketEncryption.S3_MANAGED,
+        blockPublicAccess: {
+          blockPublicAcls: false,
+          blockPublicPolicy: false,
+          ignorePublicAcls: false,
+          restrictPublicBuckets: false,
+        }
       },
     );
   }
