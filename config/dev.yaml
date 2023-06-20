@@ -160,6 +160,7 @@ fargateApiServices:
       KEYCLOAK_ADMIN: keycloak-admin-username
       KEYCLOAK_ADMIN_PASSWORD: keycloak-admin-password
     environment:
+      KC_DB: postgres
       KC_PROXY: edge
     command:
       - start-dev
