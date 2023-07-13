@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import * as route53 from 'aws-cdk-lib/aws-route53';
-import { FrontendStack } from '../../lib/stacks/frontend-stack';
+import { FrontendStack, FrontendStackProps } from '../../lib/stacks/frontend-stack';
 
 import * as Route53Mock from '../mocks/route53-mock';
 
@@ -17,7 +17,11 @@ const stackParams = {
 describe('FrontendStack', () => {
   const app = new cdk.App();
 
-  const frontendStack = new FrontendStack(app, 'FrontendStack', stackParams);
+  const frontendStack = new FrontendStack(
+    app,
+    'FrontendStack',
+    stackParams as FrontendStackProps,
+  );
 
   const template = Template.fromStack(frontendStack);
 

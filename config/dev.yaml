@@ -108,6 +108,8 @@ fargateApiServices:
     subdomain: 'api'
     serviceName: 'cpgServer'
     dockerImageUrl: 'etenlab/cpg-server'
+    cpu: 2048
+    memory: 4096
     healthCheckPath: '/'
     environment:
       PORT: 80
